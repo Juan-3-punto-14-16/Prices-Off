@@ -1,11 +1,11 @@
 <?php
 
 try {
-    $host = 'localhost';
-    $db   = 'prices-off';
-    $user = 'postgres'; 
-    $pass = 'postgres';
-    $port = '5432'; 
+    $host = $_ENV['DB_HOST'];
+    $db   = $_ENV['DB_NAME'];
+    $user = $_ENV['DB_USER'];
+    $pass = $_ENV['DB_PASS'];
+    $port = $_ENV['DB_PORT'];
 
     $dsn = "pgsql:host=$host;port=$port;dbname=$db";
     
