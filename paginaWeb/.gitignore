@@ -1,0 +1,15 @@
+# Dependencias de Node
+node_modules/
+
+# Dependencias de PHP (Composer)
+vendor/
+
+# Archivos compilados (Gulp / Webpack)
+public/build/
+
+# Archivos de configuración del sistema
+.DS_Store
+Thumbs.db
+
+# Logs y archivos temporales
+npm-debug.log*

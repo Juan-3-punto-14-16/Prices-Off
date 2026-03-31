@@ -1,11 +1,19 @@
 <?php
 
-$db = mysqli_connect('localhost', 'root', '', '');
+try {
+    $host = 'localhost';
+    $db   = 'prices-off';
+    $user = 'postgres'; 
+    $pass = 'postgres';
+    $port = '5432'; 
 
+    $dsn = "pgsql:host=$host;port=$port;dbname=$db";
+    
+    $db = new PDO($dsn, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
 
-if (!$db) {
-    echo "Error: No se pudo conectar a MySQL.";
-    echo "errno de depuración: " . mysqli_connect_errno();
-    echo "error de depuración: " . mysqli_connect_error();
+} catch (PDOException $e) {
+    echo "Error de conexión: " . $e->getMessage();
     exit;
 }

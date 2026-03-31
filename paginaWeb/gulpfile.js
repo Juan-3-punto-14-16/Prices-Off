@@ -7,6 +7,8 @@ import gulpSass from 'gulp-sass'
 import terser from 'gulp-terser'
 import sharp from 'sharp'
 
+import plumber from 'gulp-plumber'
+
 const sass = gulpSass(dartSass)
 
 const paths = {
@@ -16,6 +18,9 @@ const paths = {
 
 export function css( done ) {
     src(paths.scss, {sourcemaps: true})
+
+        .pipe( plumber() )
+
         .pipe( sass({
             outputStyle: 'compressed'
         }).on('error', sass.logError) )
