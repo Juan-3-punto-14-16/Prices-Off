@@ -1,44 +1,29 @@
 <?php
-
 namespace MVC;
 
-class Router
-{
-    public array $getRoutes = [];
-    public array $postRoutes = [];
+class Router {
+    public array $rutasGET = [];
+    public array $rutasPOST = [];
 
-    public function get($url, $fn)
-    {
-        $this->getRoutes[$url] = $fn;
+    public function get($url, $fn) {
+        $this->rutasGET[$url] = $fn;
     }
 
-    public function post($url, $fn)
-    {
-        $this->postRoutes[$url] = $fn;
+    public function post($url, $fn) {
+        $this->rutasPOST[$url] = $fn;
     }
 
-    public function comprobarRutas()
-    {
-        
-        // Proteger Rutas...
-        session_start();
+    public function comprobarRutas() {
+        $urlActual = $_SERVER['PATH_INFO'] ?? '/';
+        $metodo = $_SERVER['REQUEST_METHOD'];
 
-        // Arreglo de rutas protegidas...
-        // $rutas_protegidas = ['/admin', '/propiedades/crear', '/propiedades/actualizar', '/propiedades/eliminar', '/vendedores/crear', '/vendedores/actualizar', '/vendedores/eliminar'];
-
-        // $auth = $_SESSION['login'] ?? null;
-
-        $currentUrl = $_SERVER['PATH_INFO'] ?? '/';
-        $method = $_SERVER['REQUEST_METHOD'];
-
-        if ($method === 'GET') {
-            $fn = $this->getRoutes[$currentUrl] ?? null;
+        if($metodo === 'GET') {
+            $fn = $this->rutasGET[$urlActual] ?? NULL;
         } else {
-            $fn = $this->postRoutes[$currentUrl] ?? null;
+            $fn = $this->rutasPOST[$urlActual] ?? NULL;
         }
 
-
-        if ( $fn ) {
+        if ($fn) {
             // Call user fn va a llamar una función cuando no sabemos cual sera
             call_user_func($fn, $this); // This es para pasar argumentos
         } else {
@@ -46,17 +31,19 @@ class Router
         }
     }
 
-    public function render($view, $datos = [])
-    {
-
+    public function render($view, $datos = []) {
         // Leer lo que le pasamos  a la vista
         foreach ($datos as $key => $value) {
-            $$key = $value;  // Doble signo de dolar significa: variable variable, básicamente nuestra variable sigue siendo la original, pero al asignarla a otra no la reescribe, mantiene su valor, de esta forma el nombre de la variable se asigna dinamicamente
+            /* 
+            Doble signo de dolar significa: variable variable, básicamente nuestra variable sigue siendo la original, 
+            pero al asignarla a otra no la reescribe, mantiene su valor, de esta forma el nombre de la variable se asigna dinamicamente.
+            */
+            $$key = $value;
         }
 
         ob_start(); // Almacenamiento en memoria durante un momento...
 
-        // entonces incluimos la vista en el layout
+        // Entonces incluimos la vista en el layout
         include_once __DIR__ . "/views/$view.php";
         $contenido = ob_get_clean(); // Limpia el Buffer
         include_once __DIR__ . '/views/layout.php';
