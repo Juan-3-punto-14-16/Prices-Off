@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once __DIR__ . '/../includes/app.php';
 
 use Controllers\APIController;
@@ -17,7 +17,9 @@ $router->get('/nosotros', [PaginasController::class, 'nosotros']);
 
 // API
 $router->get('/api/buscar', [APIController::class, 'buscar']);
+$router->post('/api/escanear', [APIController::class, 'escanear']);
 $router->post('/api/guardar', [APIController::class, 'guardar']);
+$router->post('/api/votos', [APIController::class, 'registrarVoto']);
 
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
