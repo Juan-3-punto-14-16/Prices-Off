@@ -18,9 +18,9 @@ class Router {
         $metodo = $_SERVER['REQUEST_METHOD'];
 
         if($metodo === 'GET') {
-            $fn = $this->rutasGET[$urlActual] ?? NULL;
+            $fn = $this->rutasGET[$urlActual] ?? null;
         } else {
-            $fn = $this->rutasPOST[$urlActual] ?? NULL;
+            $fn = $this->rutasPOST[$urlActual] ?? null;
         }
 
         if ($fn) {
@@ -33,13 +33,7 @@ class Router {
 
     public function render($view, $datos = []) {
         // Leer lo que le pasamos  a la vista
-        foreach ($datos as $key => $value) {
-            /* 
-            Doble signo de dolar significa: variable variable, básicamente nuestra variable sigue siendo la original, 
-            pero al asignarla a otra no la reescribe, mantiene su valor, de esta forma el nombre de la variable se asigna dinamicamente.
-            */
-            $$key = $value;
-        }
+        extract($datos, EXTR_SKIP);
 
         ob_start(); // Almacenamiento en memoria durante un momento...
 

@@ -6,7 +6,7 @@ class ProductoController {
     public static function index(Router $router) {
         
 
-        $router->render('producto/index', 
+        $router->render('producto/index',
         [
 
         ]);
@@ -15,7 +15,7 @@ class ProductoController {
     public static function agregar(Router $router) {
         
 
-        $router->render('producto/agregar', 
+        $router->render('producto/agregar',
         [
 
         ]);

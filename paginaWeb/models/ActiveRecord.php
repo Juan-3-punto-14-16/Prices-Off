@@ -8,6 +8,8 @@ class ActiveRecord {
     protected static $columnasDB = [];
     public $id;
 
+    protected const SELECT_BASE = "SELECT * FROM ";
+
     // Alertas y Mensajes
     protected static $alertas = [];
     
@@ -42,7 +44,7 @@ class ActiveRecord {
             $array[] = static::crearObjeto($registro);
         }
 
-        // liberar la memoria 
+        // liberar la memoria
         $stmt->closeCursor();
 
         // retornar los resultados
@@ -63,7 +65,7 @@ class ActiveRecord {
     }
 
     // Sincroniza POST con Objetos en memoria
-    public function sincronizar($args=[]) { 
+    public function sincronizar($args=[]) {
         foreach($args as $key => $value) {
             if(property_exists($this, $key) && !is_null($value)) {
                 $this->$key = $value;
@@ -86,29 +88,28 @@ class ActiveRecord {
 
     // Todos los registros
     public static function all() {
-        $query = "SELECT * FROM " . static::$tabla;
-        $resultado = self::obtenerObjetos($query);
-        return $resultado;
+        $query = self::SELECT_BASE . static::$tabla;
+        return self::obtenerObjetos($query);
     }
 
     // Busca un registro por su id
     public static function find($id) {
-        $query = "SELECT * FROM " . static::$tabla  ." WHERE id = ? LIMIT 1";
-        $resultado = self::obtenerObjetos($query, [$id]); 
+        $query = self::SELECT_BASE . static::$tabla  ." WHERE id = ? LIMIT 1";
+        $resultado = self::obtenerObjetos($query, [$id]);
         return array_shift( $resultado ) ;
     }
 
     // Busca un registro por columna y su valor
     public static function where($col, $valor) {
-        $query = "SELECT * FROM " . static::$tabla  ." WHERE {$col} = ? LIMIT 1";
-        $resultado = self::obtenerObjetos($query, [$valor]); 
+        $query = self::SELECT_BASE . static::$tabla  ." WHERE {$col} = ? LIMIT 1";
+        $resultado = self::obtenerObjetos($query, [$valor]);
         return array_shift( $resultado ) ;
     }
 
     // Obtener Registros con cierta cantidad
     public static function get($limite) {
         $limite_seguro = (int)$limite;
-        $query = "SELECT * FROM " . static::$tabla . " LIMIT {$limite_seguro}";
+        $query = self::SELECT_BASE . static::$tabla . " LIMIT {$limite_seguro}";
         $resultado = self::obtenerObjetos($query);
         return array_shift( $resultado ) ;
     }
@@ -117,7 +118,10 @@ class ActiveRecord {
     public function atributos() {
         $atributos = [];
         foreach(static::$columnasDB as $columna) {
-            if($columna === 'id') continue;
+            if($columna === 'id') {
+                continue;
+            }
+
             $atributos[$columna] = $this->$columna;
         }
         return $atributos;
@@ -140,7 +144,7 @@ class ActiveRecord {
         $resultado = $stmt->execute(array_values($atributos));
         return [
             'resultado' =>  $resultado,
-            'id' => self::$db->lastInsertId() 
+            'id' => self::$db->lastInsertId()
         ];
     }
 
@@ -166,17 +170,14 @@ class ActiveRecord {
         $valores_ejecucion[] = $this->id;
 
         // Actualizar BD
-        $resultado = $stmt->execute($valores_ejecucion);
-        return $resultado;
+        return $stmt->execute($valores_ejecucion);
     }
 
     // Eliminar un Registro por su ID
     public function eliminar() {
         $query = "DELETE FROM "  . static::$tabla . " WHERE id = ?";
-
         $stmt = self::$db->prepare($query);
-        $resultado = $stmt->execute([$this->id]);
         
-        return $resultado;
+        return $stmt->execute([$this->id]);
     }
 }
