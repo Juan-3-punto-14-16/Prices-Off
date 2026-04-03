@@ -8,6 +8,6 @@ function debuguear($variable) : string {
 }
 
 // Escapa / Sanitizar el HTML
-function s($html) : string { 
+function s($html) : string {
     return htmlspecialchars($html);
 }

@@ -6,10 +6,12 @@ class Ubicacion extends ActiveRecord {
     protected static $tabla = 'ubicacion';
     protected static $columnasDB = ['id', 'latitud', 'longitud', 'tienda'];
 
-    public $latitud, $longitud, $tienda;
+    public $latitud;
+    public $longitud;
+    public $tienda;
 
     public function __construct($args = []){
-        $this->id = $args['id'] ?? NULL;
+        $this->id = $args['id'] ?? null;
         $this->latitud = $args['latitud'] ?? '';
         $this->longitud = $args['longitud'] ?? '';
         $this->tienda = $args['tienda'] ?? '';
