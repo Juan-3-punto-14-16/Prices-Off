@@ -1,8 +1,12 @@
 {
-  "name": "app-salon-php-mvc-sass",
+  "name": "prices-off",
   "version": "1.0.0",
-  "description": "AppSalon - Curso Desarrollo web Completo",
-  "author": "Juan De la torre @codigoconjuan",
+  "description": "Una aplicación web donde las personas reportan el precio de productos alimenticios como huevo, tortillas, frijoles, etc. en diferentes puntos de venta alrededor de su ubicacion",
+  "contributors": [
+    "Vera Godinez Yara Susana",
+    "Cesar Emanuel Hernandez Perez",
+    "Valladolid Ramirez Juan Pablo"
+  ],
   "main": "index.js",
   "type": "module",
   "scripts": {
