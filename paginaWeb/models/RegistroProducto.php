@@ -6,11 +6,11 @@ class RegistroProducto extends ActiveRecord {
     protected static $tabla = 'registroProducto';
     protected static $columnasDB = ['id', 'precio', 'fechaRegistro', 'unidadMedida', 'cantidad', 'idUbicacion', 'idCatalogo'];
 
-    public $precio; 
-    public $fechaRegistro; 
-    public $unidadMedida; 
+    public $precio;
+    public $fechaRegistro;
+    public $unidadMedida;
     public $cantidad;
-    public $idUbicacion; 
+    public $idUbicacion;
     public $idCatalogo;
 
     public function __construct($args = []){
