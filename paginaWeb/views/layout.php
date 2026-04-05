@@ -11,22 +11,20 @@
 <body>
     <header class="header">
     <div class="header_logo">
-        <a href="/index"><img src="build/img/logo.jpg" alt="Logo Prices-Off"></a>
-     </div>
+        <a href="/"><img src="build/img/logo.jpg" alt="Logo Prices-Off"></a>
+    </div>
 
-     <div class="header_titulo">
+    <div class="header_titulo">
         <h1>PRICES-OFF</h1>
-     </div>
+    </div>
 
-     <div class="header_enlace_nosotros">
+    <div class="header_enlace_nosotros">
         <a href="/nosotros">Sobre<br>Nosotros</a>
-     </div>
+    </div>
     </header>
 
     <nav class=nav_principal>
-     <a href="/">BUSCAR PRODUCTO</a> 
-     | 
-      <a href="/producto/agregar">AGREGAR PRODUCTO</a>
+    <a href="/">BUSCAR PRODUCTO</a> | <a href="/agregar">AGREGAR PRODUCTO</a>
     </nav>
 
     <main class="contenido_principal">
