@@ -18,6 +18,7 @@ $router->get('/nosotros', [PaginasController::class, 'nosotros']);
 // API
 $router->get('/api/buscar', [APIController::class, 'buscar']);
 $router->post('/api/escanear', [APIController::class, 'escanear']);
+$router->post('/api/direccion', [APIController::class, 'obtenerDireccion']);
 $router->post('/api/guardar', [APIController::class, 'guardar']);
 $router->post('/api/votos', [APIController::class, 'registrarVoto']);
 
