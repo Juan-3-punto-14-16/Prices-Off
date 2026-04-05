@@ -60,8 +60,8 @@ function paginaAnterior() {
     const paginaAnterior = document.querySelector('#anterior');
     paginaAnterior.addEventListener('click', () => {
         if(paso <= pasoInicial) return;
-            paso--;
         
+        paso--;
         botonesPaginador();
     });
 }
@@ -72,8 +72,8 @@ function paginaSiguiente() {
     const paginaSiguiente = document.querySelector('#siguiente');
     paginaSiguiente.addEventListener('click', () => {
         if(paso >= pasoFinal) return;
-            paso++;
         
+        paso++;
         botonesPaginador();
     });
 }
