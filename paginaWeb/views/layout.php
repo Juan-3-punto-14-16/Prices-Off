@@ -23,8 +23,8 @@
     </header>
 
     <nav class=nav_principal>
-      <a href="/">BUSCAR PRODUCTO</a> 
-      | 
+     <a href="/">BUSCAR PRODUCTO</a> 
+     | 
       <a href="/producto/agregar">AGREGAR PRODUCTO</a>
     </nav>
 
