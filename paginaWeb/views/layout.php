@@ -6,6 +6,7 @@
     <title>Prices-Off</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="build/css/app.css">
+    <?php echo $estilos ?? ''; ?>
 </head>
 <body>
     <header class="header">

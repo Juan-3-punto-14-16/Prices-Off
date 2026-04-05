@@ -16,3 +16,6 @@ npm-debug.log*
 
 # Variables de Entorno
 .env
+
+# Credenciales Google Cloud
+google-credenciales.json
