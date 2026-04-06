@@ -2,6 +2,10 @@
 namespace Controllers;
 
 class APIController {
+    public static function autocompletar() {
+        // TODO: Pendiente de implementar lógica
+    }
+
     public static function buscar() {
         // TODO: Pendiente de implementar lógica
     }
@@ -11,18 +15,25 @@ class APIController {
     }
 
     public static function obtenerDireccion() {
-        $lat = $_POST['latitud'] ?? '';
-        $lng = $_POST['longitud'] ?? '';
+        $lat = filter_var($_POST['latitud'] ?? '', FILTER_VALIDATE_FLOAT);
+        $lng = filter_var($_POST['longitud'] ?? '', FILTER_VALIDATE_FLOAT);
 
-        if(!$lat || !$lng) {
-            echo json_encode(['error' => 'No se enviaron las coordenadas']);
-            return; // Detiene la ejecución aquí mismo
+        if($lat === false || $lng === false) {
+            echo json_encode(['error' => 'Coordenadas inválidas']);
+            return; 
         }
 
         $apiKey = $_ENV['GOOGLE_GEOCODING_API_KEY'];
-        $url = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$lat},{$lng}&key={$apiKey}";
+        $urlBase = "https://maps.googleapis.com/maps/api/geocode/json?";
 
-        $respuesta = file_get_contents($url);
+        $parametros = http_build_query([
+            'latlng' => $lat . ',' . $lng,
+            'key' => $apiKey
+        ]);
+
+        $urlFinal = $urlBase . $parametros;
+
+        $respuesta = file_get_contents($urlFinal);
         $datos = json_decode($respuesta, true);
 
         if($datos['status'] === 'OK' && !empty($datos['results'])) {
