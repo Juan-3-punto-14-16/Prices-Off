@@ -3,23 +3,23 @@ namespace Model;
 
 class RegistroProducto extends ActiveRecord {
     // Base de datos
-    protected static $tabla = 'registroProducto';
-    protected static $columnasDB = ['id', 'precio', 'fechaRegistro', 'unidadMedida', 'cantidad', 'idUbicacion', 'idCatalogo'];
+    protected static $tabla = 'registroproducto';
+    protected static $columnasDB = ['id', 'precio', 'fecharegistro', 'unidadmedida', 'cantidad', 'idubicacion', 'idcatalogo'];
 
     public $precio;
-    public $fechaRegistro;
-    public $unidadMedida;
+    public $fecharegistro;
+    public $unidadmedida;
     public $cantidad;
-    public $idUbicacion;
-    public $idCatalogo;
+    public $idubicacion;
+    public $idcatalogo;
 
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
         $this->precio = $args['precio'] ?? '';
-        $this->fechaRegistro = date('Y/m/d');
-        $this->unidadMedida= $args['unidadMedida'] ?? '';
+        $this->fecharegistro = date('Y/m/d');
+        $this->unidadmedida= $args['unidadmedida'] ?? '';
         $this->cantidad = $args['cantidad'] ?? '';
-        $this->idUbicacion = $args['idUbicacion'] ?? '';
-        $this->idCatalogo = $args['idCatalogo'] ?? '';
+        $this->idubicacion = $args['idubicacion'] ?? '';
+        $this->idcatalogo = $args['idcatalogo'] ?? '';
     }
 }
