@@ -19,3 +19,6 @@ npm-debug.log*
 
 # Credenciales Google Cloud
 google-credenciales.json
+
+# Base de Datos
+DB_pricesOff.sql

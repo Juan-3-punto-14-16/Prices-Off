@@ -20,7 +20,7 @@ class APIController {
 
         if($lat === false || $lng === false) {
             echo json_encode(['error' => 'Coordenadas inválidas']);
-            return; 
+            return;
         }
 
         $apiKey = $_ENV['GOOGLE_GEOCODING_API_KEY'];
