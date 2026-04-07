@@ -3,7 +3,7 @@ namespace Model;
 
 class Voto extends ActiveRecord {
     // Base de datos
-    protected static $tabla = 'voto';
+    protected static $tabla = 'votos';
     protected static $columnasDB = ['id', 'voto', 'idregistroproducto', ];
 
     public $idregistroproducto;

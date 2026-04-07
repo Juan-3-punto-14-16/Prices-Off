@@ -1,6 +1,10 @@
 <?php
 namespace Controllers;
 
+use Model\Catalogo;
+use Model\RegistroProducto;
+use Model\Ubicacion;
+
 class APIController {
     public static function autocompletar() {
         // TODO: Pendiente de implementar lógica
@@ -45,7 +49,51 @@ class APIController {
     }
 
     public static function guardar() {
-        // TODO: Pendiente de implementar lógica
+        $direccionBusqueda = $_POST['direccion'];
+        $ubicacionExistente = Ubicacion::where('direccion', $direccionBusqueda);
+
+        // Se registra u obtiene la ubicación
+        if ($ubicacionExistente) {
+            $idubicacion = $ubicacionExistente->id;
+        } else {
+            $ubicacion = new Ubicacion($_POST);
+            $ubicacionResultado = $ubicacion->guardar();
+            $idubicacion = $ubicacionResultado['id'];
+        }
+
+        // Se extrae cada uno de los productos en un arreglo asociativo
+        $productos = json_decode($_POST['productos'], true);
+
+        // Por cada uno de los productos...
+        foreach($productos as $producto) {
+            $nombre = Catalogo::normalizarNombre($producto['nombre']);
+            $productoExistente = Catalogo::where('nombre', $nombre);
+
+            // Se registra u obtiene el nombre en el catalogo
+            if ($productoExistente) {
+                $idcatalogo = $productoExistente->id;
+            } else {
+                $catalogo = new Catalogo(['nombre' => $nombre]);
+                $catalogoResultado = $catalogo->guardar();
+                $idcatalogo = $catalogoResultado['id'];
+            }
+
+            // Se crea el objeto y se almacena en la BD
+            $registroProducto = new RegistroProducto([
+                'precio' => $producto['precio'],
+                'unidadmedida' => $producto['unidadmedida'],
+                'cantidad' => $producto['cantidad'],
+                'idubicacion' => $idubicacion,
+                'idcatalogo' => $idcatalogo
+            ]);
+
+            $registroProducto->guardar();
+        }
+
+        echo json_encode([
+            'resultado' => 'ok',
+            'mensaje' => 'Todos los productos fueron registrados'
+        ]);
     }
 
     public static function registrarVoto() {
