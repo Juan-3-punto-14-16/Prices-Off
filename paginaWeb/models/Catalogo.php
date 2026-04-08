@@ -11,21 +11,37 @@ class Catalogo extends ActiveRecord {
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
         $this->nombre = $args['nombre'] ?? '';
+
+        $this->normalizarNombre();
     }
 
-    public static function normalizarNombre ($nombre) {
+    public function validar() {
+        self::$alertas = [];
+
+        if($this->nombre === '') {
+            self::$alertas['error'][] = 'El nombre del producto es obligatorio';
+        }
+
+        if($this->nombre !== '' && strlen($this->nombre) < 3) {
+            self::$alertas['error'][] = 'El nombre del producto es demasiado corto';
+        }
+
+        return self::$alertas;
+    }
+
+    public function normalizarNombre () {
         // Quitar espacios al principio y al final
-        $nombre = trim($nombre);
+        $this->nombre = trim($this->nombre);
 
         // Quitar acentos
         $buscar  = ['á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú'];
         $reemplazar = ['a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'];
-        $nombre = str_replace($buscar, $reemplazar, $nombre);
+        $this->nombre = str_replace($buscar, $reemplazar, $this->nombre);
 
         // Todo a minusculas
-        $nombre = mb_strtolower($nombre, 'UTF-8');
+        $this->nombre = mb_strtolower($this->nombre, 'UTF-8');
 
         // Primera letra mayuscula y se envia la cadena ya estandarizada
-        return ucfirst($nombre);
-    } 
+        $this->nombre = ucfirst($this->nombre);
+    }
 }

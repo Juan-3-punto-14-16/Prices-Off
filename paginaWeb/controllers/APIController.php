@@ -49,54 +49,78 @@ class APIController {
     }
 
     public static function guardar() {
-        $direccionBusqueda = $_POST['direccion'];
-        $ubicacionExistente = Ubicacion::where('direccion', $direccionBusqueda);
+        // Se verifica que los datos de ubicacion sean validos
+        $ubicacion = new Ubicacion($_POST);
+        $erroresUbicacion = $ubicacion->validar();
 
-        // Se registra u obtiene la ubicación
+        // Si hay errores, se retornan en el JSON y se termina la ejecucion
+        if(!empty($erroresUbicacion)) return self::respuestaError($erroresUbicacion);
+
+        // Como no hay errores, se revisa si la dirección ya esta registrada en la BD
+        $ubicacionExistente = Ubicacion::where('direccion', $ubicacion->direccion);
+
+        // Si la direccion ya esta registrada, tomamos el id del objeto retornado por el WHERE
         if ($ubicacionExistente) {
             $idubicacion = $ubicacionExistente->id;
-        } else {
-            $ubicacion = new Ubicacion($_POST);
+        } else { // Si no estaba registrada, la almacenamos en la BD y obtenemos su ID
             $ubicacionResultado = $ubicacion->guardar();
             $idubicacion = $ubicacionResultado['id'];
         }
 
         // Se extrae cada uno de los productos en un arreglo asociativo
-        $productos = json_decode($_POST['productos'], true);
+        $productos = json_decode($_POST['productos'] ?? '', true);
+
+        // Se verifica que no este vacio el arreglo de productos, y que sea un arreglo..
+        // Si hay errores, se retornan en el JSON y se termina la ejecucion
+        if(empty($productos) || !is_array($productos)) {
+            return self::respuestaError(['error' => ['No se recibieron productos para registrar']]);
+        }
 
         // Por cada uno de los productos...
         foreach($productos as $producto) {
-            $nombre = Catalogo::normalizarNombre($producto['nombre']);
-            $productoExistente = Catalogo::where('nombre', $nombre);
+            // Se crea el producto y el mismo normaliza su nombre en el constructor
+            $catalogo = new Catalogo($producto);
 
-            // Se registra u obtiene el nombre en el catalogo
+            // // Ya normalizado, se valida el nombre
+            $erroresCatalogo = $catalogo->validar();
+
+            // Si hay errores, se retornan en el JSON y se termina la ejecucion
+            if(!empty($erroresCatalogo)) return self::respuestaError($erroresCatalogo);
+
+            // Como no hay errores, se revisa si el nombre ya esta registrado en la BD
+            $productoExistente = Catalogo::where('nombre', $catalogo->nombre);
+
+            // Si el nombre ya esta registrado, tomamos el id del objeto retornado por el WHERE
             if ($productoExistente) {
                 $idcatalogo = $productoExistente->id;
-            } else {
-                $catalogo = new Catalogo(['nombre' => $nombre]);
+            } else { // Si no estaba registrado, lo almacenamos en la BD y obtenemos su ID
                 $catalogoResultado = $catalogo->guardar();
                 $idcatalogo = $catalogoResultado['id'];
             }
 
-            // Se crea el objeto y se almacena en la BD
-            $registroProducto = new RegistroProducto([
-                'precio' => $producto['precio'],
-                'unidadmedida' => $producto['unidadmedida'],
-                'cantidad' => $producto['cantidad'],
-                'idubicacion' => $idubicacion,
-                'idcatalogo' => $idcatalogo
-            ]);
+            // Se crea el objeto 
+            $producto['idubicacion'] = $idubicacion;
+            $producto['idcatalogo'] = $idcatalogo;
+            $registroProducto = new RegistroProducto($producto);
 
+            // Se verifica que los datos de del producto sean validos
+            $erroresRegistro = $registroProducto->validar();
+
+            // Si hay errores, se retornan en el JSON y se termina la ejecucion
+            if(!empty($erroresRegistro)) return self::respuestaError($erroresRegistro);
+
+            // Se almacena en la BD
             $registroProducto->guardar();
         }
 
-        echo json_encode([
-            'resultado' => 'ok',
-            'mensaje' => 'Todos los productos fueron registrados'
-        ]);
+        echo json_encode(['mensaje' => 'Todos los productos fueron registrados']);
     }
 
     public static function registrarVoto() {
         // TODO: Pendiente de implementar lógica
+    }
+
+    private static function respuestaError($errores) {
+        echo json_encode(['error' => $errores['error']]);
     }
 }
