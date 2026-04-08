@@ -54,7 +54,10 @@ class APIController {
         $erroresUbicacion = $ubicacion->validar();
 
         // Si hay errores, se retornan en el JSON y se termina la ejecucion
-        if(!empty($erroresUbicacion)) return self::respuestaError($erroresUbicacion);
+        if(!empty($erroresUbicacion)) {
+            self::respuestaError($erroresUbicacion);
+            return;
+        }
 
         // Como no hay errores, se revisa si la dirección ya esta registrada en la BD
         $ubicacionExistente = Ubicacion::where('direccion', $ubicacion->direccion);
@@ -70,10 +73,11 @@ class APIController {
         // Se extrae cada uno de los productos en un arreglo asociativo
         $productos = json_decode($_POST['productos'] ?? '', true);
 
-        // Se verifica que no este vacio el arreglo de productos, y que sea un arreglo..
+        // Se verifica que no este vacio el arreglo de productos, y que sea un arreglo...
         // Si hay errores, se retornan en el JSON y se termina la ejecucion
         if(empty($productos) || !is_array($productos)) {
-            return self::respuestaError(['error' => ['No se recibieron productos para registrar']]);
+            self::respuestaError(['error' => ['No se recibieron productos para registrar']]);
+            return;
         }
 
         // Por cada uno de los productos...
@@ -85,7 +89,10 @@ class APIController {
             $erroresCatalogo = $catalogo->validar();
 
             // Si hay errores, se retornan en el JSON y se termina la ejecucion
-            if(!empty($erroresCatalogo)) return self::respuestaError($erroresCatalogo);
+            if(!empty($erroresCatalogo)) {
+                self::respuestaError($erroresCatalogo);
+                return;
+            }
 
             // Como no hay errores, se revisa si el nombre ya esta registrado en la BD
             $productoExistente = Catalogo::where('nombre', $catalogo->nombre);
@@ -98,7 +105,7 @@ class APIController {
                 $idcatalogo = $catalogoResultado['id'];
             }
 
-            // Se crea el objeto 
+            // Se crea el objeto
             $producto['idubicacion'] = $idubicacion;
             $producto['idcatalogo'] = $idcatalogo;
             $registroProducto = new RegistroProducto($producto);
@@ -107,7 +114,10 @@ class APIController {
             $erroresRegistro = $registroProducto->validar();
 
             // Si hay errores, se retornan en el JSON y se termina la ejecucion
-            if(!empty($erroresRegistro)) return self::respuestaError($erroresRegistro);
+            if(!empty($erroresRegistro)) {
+                self::respuestaError($erroresRegistro);
+                return;
+            }
 
             // Se almacena en la BD
             $registroProducto->guardar();

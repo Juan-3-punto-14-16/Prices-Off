@@ -35,7 +35,7 @@ class RegistroProducto extends ActiveRecord {
         }
 
         // ESTO SE TIENE QUE CAMBIAR
-        $unidadesPermitidas = ['kg', 'litro', 'pieza']; 
+        $unidadesPermitidas = ['kg', 'litro', 'pieza'];
         if($this->unidadmedida === '' || !in_array(strtolower($this->unidadmedida), $unidadesPermitidas)) {
             self::$alertas['error'][] = 'La unidad de medida no es válida';
         }
