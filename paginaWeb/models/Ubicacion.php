@@ -16,7 +16,7 @@ class Ubicacion extends ActiveRecord {
         $this->latitud = $args['latitud'] ?? '';
         $this->longitud = $args['longitud'] ?? '';
         $this->tienda = trim($args['tienda'] ?? 'Sin Nombre');
-        $this->direccion = trim($args['direccion'] ?? '');  
+        $this->direccion = trim($args['direccion'] ?? '');
     }
 
     public function validar() {
