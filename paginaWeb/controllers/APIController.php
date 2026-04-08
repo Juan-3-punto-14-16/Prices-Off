@@ -96,8 +96,6 @@ class APIController {
 
             // Como no hay errores, se revisa si el nombre ya esta registrado en la BD
             $productoExistente = Catalogo::where('nombre', $catalogo->nombre);
-            echo json_encode($productoExistente);
-            return;
 
             // Si el nombre ya esta registrado, tomamos el id del objeto retornado por el WHERE
             if ($productoExistente) {
