@@ -55,7 +55,7 @@ class APIController {
 
         // Si hay errores, se retornan en el JSON y se termina la ejecucion
         if(!empty($erroresUbicacion)) {
-            self::respuestaError($erroresUbicacion);
+            echo json_encode(['error' => $erroresUbicacion['error']]);
             return;
         }
 
@@ -76,7 +76,7 @@ class APIController {
         // Se verifica que no este vacio el arreglo de productos, y que sea un arreglo...
         // Si hay errores, se retornan en el JSON y se termina la ejecucion
         if(empty($productos) || !is_array($productos)) {
-            self::respuestaError(['error' => ['No se recibieron productos para registrar']]);
+            echo json_encode(['error' => ['No se recibieron productos para registrar']]);
             return;
         }
 
@@ -85,17 +85,19 @@ class APIController {
             // Se crea el producto y el mismo normaliza su nombre en el constructor
             $catalogo = new Catalogo($producto);
 
-            // // Ya normalizado, se valida el nombre
+            // Ya normalizado, se valida el nombre
             $erroresCatalogo = $catalogo->validar();
 
             // Si hay errores, se retornan en el JSON y se termina la ejecucion
             if(!empty($erroresCatalogo)) {
-                self::respuestaError($erroresCatalogo);
+                echo json_encode(['error' => $erroresCatalogo['error']]);
                 return;
             }
 
             // Como no hay errores, se revisa si el nombre ya esta registrado en la BD
             $productoExistente = Catalogo::where('nombre', $catalogo->nombre);
+            echo json_encode($productoExistente);
+            return;
 
             // Si el nombre ya esta registrado, tomamos el id del objeto retornado por el WHERE
             if ($productoExistente) {
@@ -105,7 +107,7 @@ class APIController {
                 $idcatalogo = $catalogoResultado['id'];
             }
 
-            // Se crea el objeto
+            // Se crea el objeto del RegistroProducto
             $producto['idubicacion'] = $idubicacion;
             $producto['idcatalogo'] = $idcatalogo;
             $registroProducto = new RegistroProducto($producto);
@@ -115,7 +117,7 @@ class APIController {
 
             // Si hay errores, se retornan en el JSON y se termina la ejecucion
             if(!empty($erroresRegistro)) {
-                self::respuestaError($erroresRegistro);
+                echo json_encode(['error' => $erroresRegistro['error']]);
                 return;
             }
 
@@ -128,9 +130,5 @@ class APIController {
 
     public static function registrarVoto() {
         // TODO: Pendiente de implementar lógica
-    }
-
-    private static function respuestaError($errores) {
-        echo json_encode(['error' => $errores['error']]);
     }
 }

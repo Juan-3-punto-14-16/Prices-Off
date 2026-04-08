@@ -13,9 +13,9 @@ class Ubicacion extends ActiveRecord {
 
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
-        $this->latitud = $args['latitud'] ?? '';
-        $this->longitud = $args['longitud'] ?? '';
-        $this->tienda = trim($args['tienda'] ?? 'Sin Nombre');
+        $this->latitud = trim($args['latitud'] ?? '');
+        $this->longitud = trim($args['longitud'] ?? '');
+        $this->tienda = trim($args['tienda'] ?? '') ?: 'Sin Nombre';
         $this->direccion = trim($args['direccion'] ?? '');
     }
 
