@@ -15,10 +15,12 @@ class RegistroProducto extends ActiveRecord {
 
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
-        $this->precio = $args['precio'] ?? '';
+        $this->precio = trim($args['precio'] ?? '');
         $this->fecharegistro = date('Y/m/d');
         $this->unidadmedida = trim($args['unidadmedida'] ?? '');
-        $this->cantidad = $args['cantidad'] ?? '';
+        $this->cantidad = trim($args['cantidad'] ?? '');
+
+        // Estas las enviamos nosotros desde el backend
         $this->idubicacion = $args['idubicacion'] ?? '';
         $this->idcatalogo = $args['idcatalogo'] ?? '';
     }
@@ -34,8 +36,7 @@ class RegistroProducto extends ActiveRecord {
             self::$alertas['error'][] = 'La cantidad es obligatoria y debe ser numérica.';
         }
 
-        // ESTO SE TIENE QUE CAMBIAR
-        $unidadesPermitidas = ['kg', 'litro', 'pieza'];
+        $unidadesPermitidas = ['kg', 'litro', 'pieza']; // ESTO SE TIENE QUE CAMBIAR
         if($this->unidadmedida === '' || !in_array(strtolower($this->unidadmedida), $unidadesPermitidas)) {
             self::$alertas['error'][] = 'La unidad de medida no es válida';
         }

@@ -10,7 +10,7 @@ class Catalogo extends ActiveRecord {
 
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
-        $this->nombre = $args['nombre'] ?? '';
+        $this->nombre = trim($args['nombre'] ?? '');
 
         $this->normalizarNombre();
     }
@@ -30,9 +30,6 @@ class Catalogo extends ActiveRecord {
     }
 
     public function normalizarNombre () {
-        // Quitar espacios al principio y al final
-        $this->nombre = trim($this->nombre);
-
         // Quitar acentos
         $buscar  = ['á', 'é', 'í', 'ó', 'ú', 'Á', 'É', 'Í', 'Ó', 'Ú'];
         $reemplazar = ['a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'];
