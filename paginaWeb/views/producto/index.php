@@ -1,4 +1,18 @@
-<!-- Aqui arriba se desarrolla el código HTML-->
+<div class="inicio_busqueda">
+    
+    <div class="contenedor_mapa_fondo">
+        </div>
+
+    <div class="bloque_central">
+        <form action="/" method="GET" class="formulario_inicio">
+            <div class="input_grupo">
+                <input type="text" name="query" placeholder="Escribe algo" id="input_busqueda" autocomplete="off">
+                <button type="submit" class="btn_buscar_inicio">BUSCAR</button>
+            </div>
+        </form>
+    </div>
+
+</div>
 
 <?php
     $estilos = "<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
