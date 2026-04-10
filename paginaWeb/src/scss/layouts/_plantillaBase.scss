@@ -4,7 +4,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem, 3rem;
+    padding: 1rem 1rem;
 }
 .header_logo img {
     max-width: 150px;
@@ -35,15 +35,16 @@
 .nav_principal {
     background-color: v.$verde_claro;
     text-align: center;
-    padding: 0.8rem 0;
+    padding: 2rem 0;
 }
-.nav_principal a {
+.nav_enlace {
     color: v.$blanco;
     font-weight: bold;
     font-size: 1.5rem;
     margin: 0 1rem;
 }
-.nav_principal a:hover {
+.nav_enlace:hover,
+.nav_enlace_activo {
     color: v.$amarillo;
 }
 .contenido_principal {

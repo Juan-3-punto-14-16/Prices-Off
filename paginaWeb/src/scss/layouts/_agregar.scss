@@ -1,0 +1,188 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m;
+
+.contenedor_agregar {
+    padding: 3rem;
+    background-color: v.$crema;
+
+    @include m.grid(1, 3rem);
+    @include m.tablet {
+        @include m.grid(2, 3rem);
+    }
+}
+.centrar_contenido {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.btn_escanear {
+    @include m.boton(v.$amarillo, v.$negro);
+    margin: 0 auto;
+    border-radius: 0.5rem;
+    font-size: 1.4rem; 
+    padding: 1.5rem 4rem; 
+    border: none;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+}
+.alinear_derecha {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.btn_enviar {
+    @include m.boton(v.$amarillo, v.$negro);
+    margin: 0; 
+    border-radius: 2rem; 
+    font-size: 1.2rem;
+    padding: 1rem 3.5rem;
+    border: none;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+}
+.instruccion_manual{
+    font-weight: bold;
+    margin-top: 1.5rem;
+    font-size: 1.7rem;
+}
+.caja_formulario {
+    border: 3px solid v.$negro;
+    padding: 2rem;
+    background-color: v.$blanco;
+    margin-bottom: 2rem;
+}
+.producto_encabezados {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr 40px;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+
+    .etiqueta_pill{
+        color: v.$negro;
+        border: 2px solid v.$negro;
+        border-radius: 2rem;
+        text-align: center;
+        font-weight: bold;
+        padding: 1.2rem;
+        font-size: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        line-height: 1.1rem;
+    }
+}
+.lista_productos {
+    margin-bottom: 1rem;
+    max-height: 180px; /* Puedes subir o bajar este número dependiendo de qué tan grande quieras la caja */
+    overflow-y: auto;  /* Crea el scroll vertical automáticamente solo cuando es necesario */
+    overflow-x: hidden; /* Evita que salga un scroll horizontal feo por accidente */
+    padding-right: 0.5rem; /* Da un pequeñito espacio para que la barra no se encime en tus inputs */
+}
+.producto_fila{
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.5fr 40px;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+
+    input, select {
+        -webkit-appearance: none; /* Quita el diseño por defecto de Chrome/Safari */
+        -moz-appearance: none;    /* Quita el diseño por defecto de Firefox */
+        appearance: none;
+        
+        padding: 0.8rem;
+        border: 2px solid #ccc;
+        border-radius: 2rem;
+        text-align: center;
+        font-weight: bold;
+        width: 100%;
+        outline: none;
+        
+    }
+
+    &:focus-within {
+        border-color: v.$negro;
+    }
+    select:invalid {
+        color: #7e7d7d; /* El gris clásico de los placeholders */
+    }
+    select option {
+        color: v.$negro; 
+    }
+}
+.btn_eliminar {
+    background-color: transparent;
+    border: 2px solid red;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    color: red;
+    transition: all 0.5s ease;
+
+    svg{
+        width: 20px;
+        height: 20px;
+    }
+
+    &:hover {
+        background-color: red;
+        color: v.$blanco;
+    }
+}
+.btn_agregar_otro{
+    background-color: transparent;
+    border: none;
+    color: v.$negro;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 2rem;
+
+    &:hover {
+        color: v.$negro;
+    }
+}
+.campo_establecimiento {
+   margin-bottom: 2rem;
+
+   input{
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid v.$negro;
+    font-weight: bold;
+    outline: none;
+   }
+}
+.contenedor_mapa{
+    display: flex;
+    flex-direction: column;
+}
+.mapa_placeholder {
+    width: 100%;
+}
+.mapa_etiqueta {
+    border: 2px solid v.$negro;
+    padding: 1rem;
+    text-align: center;
+    font-weight: bold;
+    background-color: v.$blanco;
+    margin-top: 1rem;
+}
+.mapa_visual{
+    height: 500px;
+    width: 100%;
+    border: 2px solid v.$negro;
+    background-color: v.$gris;
+    z-index: 1;
+}

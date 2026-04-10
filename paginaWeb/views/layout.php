@@ -23,8 +23,10 @@
     </div>
     </header>
 
-    <nav class=nav_principal>
-    <a href="/">BUSCAR PRODUCTO</a> | <a href="/agregar">AGREGAR PRODUCTO</a>
+    <?php $pagina = $_SERVER['PATH_INFO'] ?? '/'; ?>
+    <nav class="nav_principal">
+        <a class="nav_enlace <?= $pagina === '/' ? 'nav_enlace_activo' : '' ?>" href="/">BUSCAR PRODUCTO</a> |
+        <a class="nav_enlace <?= $pagina === '/agregar' ? 'nav_enlace_activo' : '' ?>" href="/agregar">AGREGAR PRODUCTO</a>
     </nav>
 
     <main class="contenido_principal">
