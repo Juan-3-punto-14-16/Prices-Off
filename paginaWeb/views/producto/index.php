@@ -1,17 +1,41 @@
-<div class="inicio_busqueda">
-    
-    <div class="contenedor_mapa_fondo">
-        </div>
+<div class="inicio_busqueda" id="contenedor_principal">
 
+    <div class="contenedor_mapa_fondo"></div>
     <div class="bloque_central">
-        <form action="/" method="GET" class="formulario_inicio">
+        <form class="formulario_inicio">
             <div class="input_grupo">
-                <input type="text" name="query" placeholder="Escribe algo" id="input_busqueda" autocomplete="off">
+                <input type="text" name="query" placeholder="Jitomate, cebolla..." autocomplete="off">
                 <button type="submit" class="btn_buscar_inicio">BUSCAR</button>
             </div>
         </form>
     </div>
 
+    <div class="cuerpo_resultados">
+        <aside class="sidebar_productos">
+            <div class="ordenamiento">
+                <label for="orden">Ordenar por:</label>
+                <select id="orden">
+                    <option value="precio">Precio</option>
+                    <option value="distancia">Distancia</option>
+                </select>
+            </div>
+
+            <div class="lista_cards" id="contenedor_tarjetas"></div>
+        </aside>
+
+        <main class="mapa_contenedor">
+            <div class="buscador_flotante_mapa">
+                <form class="formulario_inicio">
+                    <div class="input_grupo">
+                        <input type="text" name="query" id="input_busqueda_flotante" autocomplete="off">
+                        <button type="submit" class="btn_buscar_inicio">BUSCAR</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="mapa_resultados" class="mapa_full"></div>
+        </main>
+    </div>
 </div>
 
 <?php
