@@ -10,6 +10,18 @@ class ActiveRecord {
 
     protected const SELECT_BASE = "SELECT * FROM ";
 
+    public static function iniciarTransaccion() {
+        self::$db->beginTransaction();
+    }
+
+    public static function confirmarTransaccion() {
+        self::$db->commit();
+    }
+
+    public static function revertirTransaccion() {
+        self::$db->rollBack();
+    }
+
     // Alertas y Mensajes
     protected static $alertas = [];
     
