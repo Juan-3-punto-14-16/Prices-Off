@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function iniciarApp() {
     iniciarFormularioProductos();
+    iniciarBuscadorInicio();
 }
 
 function iniciarFormularioProductos() {
@@ -44,6 +45,30 @@ function iniciarFormularioProductos() {
                     });
                 }
             }
+        });
+    }
+}
+function iniciarBuscadorInicio() {
+    const contenedorPrincipal = document.getElementById('contenedor_principal');
+    const formularios = document.querySelectorAll('.formulario_inicio');
+    const inputFlotante = document.getElementById('input_busqueda_flotante');
+
+    // Comprobamos que estemos en la página correcta antes de ejecutar
+    if(contenedorPrincipal && formularios.length > 0) {
+        formularios.forEach(form => {
+            form.addEventListener('submit', function(evento) {
+                evento.preventDefault(); // Evita recargar
+                
+                const textoBuscado = this.querySelector('input[name="query"]').value;
+                if(textoBuscado.trim() === '') return; // No hace nada si está vacío
+
+                // 1. Cambiamos a la vista de resultados (Aparece barra lateral y mapa)
+                contenedorPrincipal.classList.add('resultados_activos');
+                if(inputFlotante) inputFlotante.value = textoBuscado;
+
+                // 2. Dibujamos las tarjetas (Próximamente conectadas a BD)
+                buscarYMostrarResultados(textoBuscado);
+            });
         });
     }
 }

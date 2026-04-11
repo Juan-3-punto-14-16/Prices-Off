@@ -170,17 +170,28 @@
 }
 .mapa_placeholder {
     width: 100%;
+    position: relative;
 }
 .mapa_etiqueta {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%); 
+    
+    width: 80%;
+    max-width: 1000px;
     border: 2px solid v.$negro;
-    padding: 1rem;
+    padding: 1.2rem;
     text-align: center;
     font-weight: bold;
+    font-size: 1.5rem;
     background-color: v.$blanco;
-    margin-top: 1rem;
+    color: v.$negro;
 }
+
 .mapa_visual{
-    height: 500px;
+    height: 100%;
+    min-height: 550px; 
     width: 100%;
     border: 2px solid v.$negro;
     background-color: v.$gris;
