@@ -1,6 +1,7 @@
 <?php
 namespace Controllers;
 
+use Model\ActiveRecord;
 use Model\Catalogo;
 use Model\RegistroProducto;
 use Model\Ubicacion;
@@ -59,6 +60,19 @@ class APIController {
             return;
         }
 
+        // Se extrae cada uno de los productos en un arreglo asociativo
+        $productos = json_decode($_POST['productos'] ?? '', true);
+
+        // Se verifica que no este vacio el arreglo de productos, y que sea un arreglo...
+        // Si hay errores, se retornan en el JSON y se termina la ejecucion
+        if(empty($productos) || !is_array($productos)) {
+            echo json_encode(['error' => ['No se recibieron productos para registrar']]);
+            return;
+        }
+
+        // Ningun guardar() es definitivo aún A PARTIR DE AQUÍ
+        ActiveRecord::iniciarTransaccion();
+
         // Como no hay errores, se revisa si la dirección ya esta registrada en la BD
         $ubicacionExistente = Ubicacion::where('direccion', $ubicacion->direccion);
 
@@ -70,17 +84,15 @@ class APIController {
             $idubicacion = $ubicacionResultado['id'];
         }
 
-        // Se extrae cada uno de los productos en un arreglo asociativo
-        $productos = json_decode($_POST['productos'] ?? '', true);
-
-        // Se verifica que no este vacio el arreglo de productos, y que sea un arreglo...
-        // Si hay errores, se retornan en el JSON y se termina la ejecucion
-        if(empty($productos) || !is_array($productos)) {
-            echo json_encode(['error' => ['No se recibieron productos para registrar']]);
+        // Por cada uno de los productos...
+        if(!self::procesarListaProductos($productos, $idubicacion)){
             return;
         }
 
-        // Por cada uno de los productos...
+        echo json_encode(['mensaje' => 'Todos los productos fueron registrados']);
+    }
+
+    private static function procesarListaProductos($productos, $idubicacion) {
         foreach($productos as $producto) {
             // Se crea el producto y el mismo normaliza su nombre en el constructor
             $catalogo = new Catalogo($producto);
@@ -90,8 +102,9 @@ class APIController {
 
             // Si hay errores, se retornan en el JSON y se termina la ejecucion
             if(!empty($erroresCatalogo)) {
+                ActiveRecord::revertirTransaccion();
                 echo json_encode(['error' => $erroresCatalogo['error']]);
-                return;
+                return false;
             }
 
             // Como no hay errores, se revisa si el nombre ya esta registrado en la BD
@@ -115,15 +128,18 @@ class APIController {
 
             // Si hay errores, se retornan en el JSON y se termina la ejecucion
             if(!empty($erroresRegistro)) {
+                ActiveRecord::revertirTransaccion();
                 echo json_encode(['error' => $erroresRegistro['error']]);
-                return;
+                return false;
             }
 
             // Se almacena en la BD
             $registroProducto->guardar();
         }
 
-        echo json_encode(['mensaje' => 'Todos los productos fueron registrados']);
+        // Entonces sí, ejecutamos todos los query en la BD se vuelven PERMANENTES
+        ActiveRecord::confirmarTransaccion();
+        return true; 
     }
 
     public static function registrarVoto() {
