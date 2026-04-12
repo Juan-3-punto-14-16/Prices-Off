@@ -6,6 +6,7 @@ use Model\Catalogo;
 use Model\RegistroProducto;
 use Model\Ubicacion;
 use Model\ViewModel;
+use Model\Voto;
 
 class APIController {
     public static function autocompletar() {
@@ -169,6 +170,35 @@ class APIController {
     }
 
     public static function registrarVoto() {
-        // TODO: Pendiente de implementar lógica
+        $voto = new Voto($_POST);
+        $erroresVoto = $voto->validar();
+
+        if(!empty($erroresVoto)) {
+            echo json_encode(['error' => $erroresVoto['error']]);
+            return;
+        }
+
+        if($voto->id) {
+            $votoExistente = Voto::find($voto->id);
+
+            if(!$votoExistente) {
+                echo json_encode(['error' => 'Datos inválidos']);
+                return;
+            }
+
+            if((int)$votoExistente->idregistroproducto !== (int)$voto->idregistroproducto) {
+                echo json_encode(['error' => 'Datos inválidos']);
+                return;
+            }
+        }
+
+        $resultado = $voto->guardar();
+
+        // Fue un registro nuevo, devolvemos el ID y un true en la etiqueta resultado
+        if(!$voto->id) {
+            echo json_encode(['datos' => $resultado]);
+        } else { // Fue una actualización, solo enviamos true en la etiqueta resultado
+            echo json_encode(['datos' => ['resultado' => true]]);
+        }
     }
 }
