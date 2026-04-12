@@ -39,11 +39,6 @@ class ActiveRecord {
         return static::$alertas;
     }
 
-    public function validar() {
-        static::$alertas = [];
-        return static::$alertas;
-    }
-
     // Consulta SQL para crear un objeto en Memoria
     public static function obtenerObjetos($query, $params = []) {
         // Consultar la base de datos
@@ -119,7 +114,7 @@ class ActiveRecord {
     }
 
     // Consulta Plana de SQL (Utilizar cuando los métodos del modelo no son suficientes)
-    public static function SQL($query) {
+    public static function sql($query) {
         return self::obtenerObjetos($query);
     }
 
@@ -127,7 +122,7 @@ class ActiveRecord {
     public static function iLike($col, $valor, $limite = 5) {
         $limite_seguro = (int)$limite;
         $query = self::SELECT_BASE . static::$tabla . " WHERE {$col} ILIKE ? LIMIT {$limite_seguro}";
-        $valor = "%$valor%"; 
+        $valor = "%$valor%";
         return self::obtenerObjetos($query, [$valor]);
     }
 
