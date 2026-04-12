@@ -36,7 +36,7 @@ class APIController {
 
         echo json_encode([
             'mensaje' => 'Búsqueda exitosa',
-            'datos' => $resultados 
+            'datos' => $resultados
         ]);
     }
 
@@ -165,7 +165,7 @@ class APIController {
 
         // Entonces sí, ejecutamos todos los query en la BD se vuelven PERMANENTES
         ActiveRecord::confirmarTransaccion();
-        return true; 
+        return true;
     }
 
     public static function registrarVoto() {

@@ -39,7 +39,7 @@ class ViewModel extends ActiveRecord {
     // ESTA CONSULTA ESTA OPTIMIZADA PARA POSTGRES
     public static function consulta ($nombre) {
         $query = "
-            SELECT 
+            SELECT
                 rp.id,
                 TO_CHAR(rp.fecharegistro, 'DD/MM/YYYY') AS publicado,
                 ROUND((rp.precio / rp.cantidad),2) AS preciounitario,
