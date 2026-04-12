@@ -1,6 +1,6 @@
 <div class="contenedor_agregar">
     
-    <form class="formulario_productos" action="/ruta-donde-se-guardara" method="POST">
+    <form class="formulario_productos" id="formulario_productos" action="/api/guardar" method="POST">
         <div class="centrar_contenido">
             <button class="btn_escanear" type="button">Escanear Ticket</button>
             <p class="instruccion_manual">Si no, ingresa los datos del producto manualmente</p>
