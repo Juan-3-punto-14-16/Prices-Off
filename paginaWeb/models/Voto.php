@@ -10,8 +10,26 @@ class Voto extends ActiveRecord {
     public $voto;
 
     public function __construct($args = []){
-        $this->id = $args['id'] ?? null;
-        $this->idregistroproducto = $args['idregistroproducto'] ?? '';
+        $this->id = filter_var($args['id'] ?? null, FILTER_VALIDATE_INT) ?: null;
+        $this->idregistroproducto = trim($args['idregistroproducto'] ?? '');
         $this->voto = $args['voto'] ?? '';
+    }
+
+    public function validar() {
+        self::$alertas = [];
+
+        if($this->idregistroproducto === '' || !filter_var($this->idregistroproducto, FILTER_VALIDATE_INT)) {
+            self::$alertas['error'][] = 'El ID del producto es inválido';
+        }
+
+        if($this->voto === '') {
+            self::$alertas['error'][] = 'El valor del voto es obligatorio';
+        }
+
+        if ($this->voto !== true && $this->voto !== false && $this->voto !== 'true' && $this->voto !== 'false') {
+            self::$alertas['error'][] = 'El valor del voto es inválido';
+        }
+
+        return self::$alertas;
     }
 }
