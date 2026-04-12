@@ -5,14 +5,39 @@ use Model\ActiveRecord;
 use Model\Catalogo;
 use Model\RegistroProducto;
 use Model\Ubicacion;
+use Model\ViewModel;
 
 class APIController {
     public static function autocompletar() {
-        // TODO: Pendiente de implementar lógica
+        $nombre = trim($_GET['nombre'] ?? '');
+
+        if(empty($nombre)) {
+            echo json_encode(['datos' => []]);
+            return;
+        }
+
+        $resultados = Catalogo::iLike('nombre', $nombre);
+        echo json_encode(['datos' => $resultados]);
     }
 
     public static function buscar() {
-        // TODO: Pendiente de implementar lógica
+        $nombre = trim($_GET['nombre'] ?? '');
+
+        if(empty($nombre)) {
+            echo json_encode(['error' => ['El campo de búsqueda no puede estar vacío']]);
+            return;
+        }
+
+        $resultados = ViewModel::consulta($nombre);
+        if(empty($resultados)) {
+            echo json_encode(['error' => ['No se encontraron productos con ese nombre']]);
+            return;
+        }
+
+        echo json_encode([
+            'mensaje' => 'Búsqueda exitosa',
+            'datos' => $resultados
+        ]);
     }
 
     public static function escanear() {
@@ -20,8 +45,8 @@ class APIController {
     }
 
     public static function obtenerDireccion() {
-        $lat = filter_var($_POST['latitud'] ?? '', FILTER_VALIDATE_FLOAT);
-        $lng = filter_var($_POST['longitud'] ?? '', FILTER_VALIDATE_FLOAT);
+        $lat = filter_var($_GET['latitud'] ?? '', FILTER_VALIDATE_FLOAT);
+        $lng = filter_var($_GET['longitud'] ?? '', FILTER_VALIDATE_FLOAT);
 
         if($lat === false || $lng === false) {
             echo json_encode(['error' => 'Coordenadas inválidas']);
@@ -92,6 +117,7 @@ class APIController {
         echo json_encode(['mensaje' => 'Todos los productos fueron registrados']);
     }
 
+    // FUNCIÓN HELPER
     private static function procesarListaProductos($productos, $idubicacion) {
         foreach($productos as $producto) {
             // Se crea el producto y el mismo normaliza su nombre en el constructor
@@ -139,7 +165,7 @@ class APIController {
 
         // Entonces sí, ejecutamos todos los query en la BD se vuelven PERMANENTES
         ActiveRecord::confirmarTransaccion();
-        return true; 
+        return true;
     }
 
     public static function registrarVoto() {
