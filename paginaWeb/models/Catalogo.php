@@ -35,7 +35,7 @@ class Catalogo extends ActiveRecord {
         $reemplazar = ['a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'];
         $this->nombre = str_replace($buscar, $reemplazar, $this->nombre);
 
-        // Todo a minusculas
+        // A minusculas
         $this->nombre = mb_strtolower($this->nombre, 'UTF-8');
 
         // Primera letra mayuscula y se envia la cadena ya estandarizada
