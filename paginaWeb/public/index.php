@@ -15,17 +15,14 @@ $router->get('/agregar', [ProductoController::class, 'agregar']);
 // Nosotros
 $router->get('/nosotros', [PaginasController::class, 'nosotros']);
 
-// API
+// API's
 $router->get('/api/autocompletar', [APIController::class, 'autocompletar']);
 $router->get('/api/buscar', [APIController::class, 'buscar']);
-$router->post('/api/escanear', [APIController::class, 'escanear']);
-
-// Es de tipo POST para evitar que viajen las coordenadas en la URL
-$router->post('/api/direccion', [APIController::class, 'obtenerDireccion']);
-
-$router->post('/api/guardar', [APIController::class, 'guardar']);
 $router->post('/api/votos', [APIController::class, 'registrarVoto']);
 
+$router->post('/api/escanear', [APIController::class, 'escanear']);
+$router->get('/api/direccion', [APIController::class, 'obtenerDireccion']);
+$router->post('/api/guardar', [APIController::class, 'guardar']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();
