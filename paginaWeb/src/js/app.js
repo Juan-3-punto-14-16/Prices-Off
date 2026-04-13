@@ -371,4 +371,70 @@ function ordenarResultados(metodo) {
 }
 
 function iniciarAutocompletado() {
+    const inputsBusqueda = document.querySelectorAll('input[name="query"]');
+
+    inputsBusqueda.forEach(input => {
+        // Contenedor para las sugerencias
+        let contenedorSugerencias = input.parentElement.querySelector('.sugerencias_lista');
+
+        if (!contenedorSugerencias) {
+            contenedorSugerencias = document.createElement('UL');
+            contenedorSugerencias.classList.add('sugerencias_lista');
+            input.parentElement.appendChild(contenedorSugerencias);
+        }
+
+        input.addEventListener('input', async function () {
+            // Si el texto es muy corto, no hace la consulta
+            const busqueda = input.value.trim();
+
+            if (busqueda.length < 2) {
+                contenedorSugerencias.innerHTML = '';
+                return;
+            }
+
+            // Hace la consulta a la API de autocompletado
+            try {
+                const url = `/api/autocompletar?nombre=${busqueda}`;
+                const respuesta = await fetch(url);
+                const resultado = await respuesta.json();
+
+                if (resultado.datos) {
+                    mostrarSugerencias(resultado.datos, contenedorSugerencias, input);
+                }
+            }
+            catch (error) {
+                console.error("Error en autocompletado:", error);
+            }
+        });
+        // Cerrar sugerencias al hacer clic fuera del input
+        document.addEventListener('click', function (e) {
+            if (e.target !== input) {
+                contenedorSugerencias.innerHTML = '';
+            }
+        });
+    });
+}
+
+function mostrarSugerencias(sugerencias, contenedor, input) {
+    contenedor.innerHTML = ''; // Limpia sugerencias anteriores
+
+    sugerencias.forEach(sugerencia => {
+        const li = document.createElement('LI');
+        li.textContent = sugerencia.nombre;
+        li.classList.add('sugerencia_nombre');
+
+        li.addEventListener('click', function () {
+            input.value = sugerencia.nombre; // Completa el input con la sugerencia
+            contenedor.innerHTML = '';
+
+            const form = input.closest('form');
+            if (form) {
+                form.dispatchEvent(new Event('submit')); // Envía el formulario para mostrar resultados
+            } else {
+                // Si no hay formulario, puedes llamar a la función de búsqueda directamente
+                buscarYMostrarResultados(sugerencia.nombre);
+            }
+        });
+        contenedor.appendChild(li);
+    });
 }
