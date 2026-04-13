@@ -2,10 +2,17 @@ document.addEventListener('DOMContentLoaded', () => {
     iniciarApp();
 })
 
+let productosActuales = [];
+// CAMBIAR: latitud y longitud de prueba 20.655262648774382, -103.32549261971924
+let latitud = 20.655262;
+let longitud = -103.325492;
+
 function iniciarApp() {
     iniciarFormularioProductos();
     iniciarBuscadorInicio();
     enviarProductosFetch();
+    iniciarMecanismoVotos();
+    iniciarAutocompletado();
 }
 
 function iniciarFormularioProductos() {
@@ -72,6 +79,15 @@ function iniciarBuscadorInicio() {
             });
         });
     }
+
+    // Ordenar resultados según el criterio seleccionado en el select
+    const seleccionarOrden = document.querySelector('#orden');
+    if (seleccionarOrden) {
+        seleccionarOrden.addEventListener('change', function () {
+            const metodo = seleccionarOrden.value;
+            ordenarResultados(metodo);
+        });
+    }
 }
 
 async function enviarProductosFetch() {
@@ -80,10 +96,6 @@ async function enviarProductosFetch() {
 
     formulario.addEventListener('submit', async function (evento) {
         evento.preventDefault(); // Evita recargar
-
-        // CAMBIAR: latitud y longitud de prueba 20.655262648774382, -103.32549261971924
-        const latitud = 20.655262;
-        const longitud = -103.325492;
 
         let direccionObtenida = "Dirección no encontrada";
 
@@ -159,9 +171,13 @@ function mostrarTarjetas(productos, latU, lonU) {
     productos.forEach(producto => {
         // Calcula la distancia real entre el usuario y el producto usando sus coordenadas
         const distanciaReal = calcularDistancia(latU, lonU, producto.latitud, producto.longitud);
+        // Verifica si el usuario ya votó por este producto consultando el localStorage
+        const votosRealizados = JSON.parse(localStorage.getItem('votos_pricesoff')) || [];
+        const yaVoto = votosRealizados.includes(producto.id.toString());
 
         const card = document.createElement('DIV');
         card.classList.add('card_producto');
+
         card.innerHTML = `
             <div class="card_header">
                 <h3>${producto.tienda}</h3>
@@ -173,18 +189,20 @@ function mostrarTarjetas(productos, latU, lonU) {
 
             <div class="card_footer">
                 <div class="reacciones">
-                    <div class="icon_btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M7 10v12" /><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
+                    <button class="icon_btn btn_votar" data-id="${producto.id}" data-voto="true" ${yaVoto ? 'disabled style="color: #2ecc71"' : ''}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M7 10v12" />
+                            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
                         </svg>
-                        <span>${producto.votospositivos}</span>
-                    </div>
-                    <div class="icon_btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 14V2" /><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
+                        <span class="conteo_votos">${producto.votospositivos}</span>
+                    </button>
+                    <button class="icon_btn btn_votar" data-id="${producto.id}" data-voto="false" ${yaVoto ? 'disabled style="color: #2ecc71"' : ''}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 14V2" />
+                            <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
                         </svg>
-                        <span>${producto.votosnegativos}</span>
-                    </div>
+                        <span class="conteo_votos">${producto.votosnegativos}</span>
+                    </button>
                 </div>
 
                 <div class="precio_destacado">
@@ -204,23 +222,45 @@ async function buscarYMostrarResultados(textoBuscado) {
         const resultado = await respuesta.json();
 
         if (!resultado.datos) return;
+        // Guarda los productos actuales para ordenarlos despues sin tener que hacer otra consulta
+        productosActuales = resultado.datos;
+        const metodoActual = document.querySelector('#orden').value; // Método de ordenamiento actual
 
         // Intenta obtener la ubicación del usuario, si el navegador lo permite y el usuario lo autoriza
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    // Si acepta, calculamos con su posición real
-                    mostrarTarjetas(resultado.datos, pos.coords.latitude, pos.coords.longitude);
+                    latitud = pos.coords.latitude;
+                    longitud = pos.coords.longitude;
+                    ordenarResultados(metodoActual); // Reordena resultados                   
                 },
                 (error) => {
                     // Si rechaza, usamos coordenadas por defecto
-                    mostrarTarjetas(resultado.datos, 20.6552, -103.3254);
+                    Swal.fire({
+                        icon: 'info',
+                        title: '¡Permisos de ubicación denegados!',
+                        text: 'Se usarán coordenadas por defecto.',
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        toast: true
+                    });
+                    ordenarResultados(metodoActual);
                 }
             );
         }
         else {
             // Si el navegador no soporta geolocalización, usamos coordenadas por defecto
-            mostrarTarjetas(resultado.datos, 20.6552, -103.3254);
+            Swal.fire({
+                icon: 'info',
+                title: '¡Ubicación no disponible!',
+                text: 'Se usarán coordenadas por defecto.',
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                toast: true
+            });
+            ordenarResultados(metodoActual);
         }
     }
     catch (error) {
@@ -239,4 +279,162 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return (R * c).toFixed(1); // Retorna la distancia con un decimal
+}
+
+function iniciarMecanismoVotos() {
+    const contenedor = document.querySelector('#contenedor_tarjetas');
+
+    if (contenedor) {
+        contenedor.addEventListener('click', async (e) => {
+            const boton = e.target.closest('.btn_votar');
+            if (boton) {
+                const idProducto = boton.dataset.id;
+                const voto = boton.dataset.voto;
+
+                await registrarVotoFetch(idProducto, voto, boton);
+            }
+        });
+    }
+}
+
+async function registrarVotoFetch(idProducto, voto, boton) {
+    const votosRealizados = JSON.parse(localStorage.getItem('votos_pricesoff')) || [];
+
+    if (votosRealizados.includes(idProducto.toString())) {
+        Swal.fire({
+            icon: 'info',
+            title: '¡Ya votaste!',
+            text: 'Solo puedes votar una vez por producto.',
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            toast: true
+        });
+        return;
+    }
+
+    const datos = new FormData();
+    datos.append('idregistroproducto', idProducto);
+    datos.append('voto', voto);
+
+    try {
+        const url = '/api/votos';
+        const respuesta = await fetch(url, {
+            method: 'POST',
+            body: datos
+        });
+        const resultado = await respuesta.json();
+
+        if (resultado.datos) {
+            // Guarda en localStorage el ID del producto ya votado
+            votosRealizados.push(idProducto.toString());
+            localStorage.setItem('votos_pricesoff', JSON.stringify(votosRealizados));
+
+            // Actualiza la interfaz
+            const conteoSpan = boton.querySelector('.conteo_votos');
+            conteoSpan.textContent = parseInt(conteoSpan.textContent) + 1;
+
+            boton.style.color = (voto === "true") ? "#2ecc71" : "#e74c3c";
+            boton.disabled = true;
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Voto registrado!',
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500,
+                toast: true
+            });
+        }
+    }
+    catch (error) {
+        console.error("Error al registrar el voto:", error);
+    }
+}
+
+function ordenarResultados(metodo) {
+    if (productosActuales.length === 0) return; // Si no hay productos, no hacemos nada
+
+    const copiaProductos = [...productosActuales]; // Creamos una copia para no modificar el arreglo original
+
+    if (metodo === 'precio') {
+        copiaProductos.sort((a, b) => parseFloat(a.preciounitario) - parseFloat(b.preciounitario));
+    }
+    else if (metodo === 'distancia') {
+        copiaProductos.sort((a, b) => {
+            const distanciaA = calcularDistancia(latitud, longitud, a.latitud, a.longitud);
+            const distanciaB = calcularDistancia(latitud, longitud, b.latitud, b.longitud);
+            return parseFloat(distanciaA) - parseFloat(distanciaB);
+        });
+    }
+    mostrarTarjetas(copiaProductos, latitud, longitud);
+}
+
+function iniciarAutocompletado() {
+    const inputsBusqueda = document.querySelectorAll('input[name="query"]');
+
+    inputsBusqueda.forEach(input => {
+        // Contenedor para las sugerencias
+        let contenedorSugerencias = input.parentElement.querySelector('.sugerencias_lista');
+
+        if (!contenedorSugerencias) {
+            contenedorSugerencias = document.createElement('UL');
+            contenedorSugerencias.classList.add('sugerencias_lista');
+            input.parentElement.appendChild(contenedorSugerencias);
+        }
+
+        input.addEventListener('input', async function () {
+            // Si el texto es muy corto, no hace la consulta
+            const busqueda = input.value.trim();
+
+            if (busqueda.length < 2) {
+                contenedorSugerencias.innerHTML = '';
+                return;
+            }
+
+            // Hace la consulta a la API de autocompletado
+            try {
+                const url = `/api/autocompletar?nombre=${busqueda}`;
+                const respuesta = await fetch(url);
+                const resultado = await respuesta.json();
+
+                if (resultado.datos) {
+                    mostrarSugerencias(resultado.datos, contenedorSugerencias, input);
+                }
+            }
+            catch (error) {
+                console.error("Error en autocompletado:", error);
+            }
+        });
+        // Cerrar sugerencias al hacer clic fuera del input
+        document.addEventListener('click', function (e) {
+            if (e.target !== input) {
+                contenedorSugerencias.innerHTML = '';
+            }
+        });
+    });
+}
+
+function mostrarSugerencias(sugerencias, contenedor, input) {
+    contenedor.innerHTML = ''; // Limpia sugerencias anteriores
+
+    sugerencias.forEach(sugerencia => {
+        const li = document.createElement('LI');
+        li.textContent = sugerencia.nombre;
+        li.classList.add('sugerencia_nombre');
+
+        li.addEventListener('click', function () {
+            input.value = sugerencia.nombre; // Completa el input con la sugerencia
+            contenedor.innerHTML = '';
+
+            const form = input.closest('form');
+            if (form) {
+                form.dispatchEvent(new Event('submit')); // Envía el formulario para mostrar resultados
+            } else {
+                // Si no hay formulario, puedes llamar a la función de búsqueda directamente
+                buscarYMostrarResultados(sugerencia.nombre);
+            }
+        });
+        contenedor.appendChild(li);
+    });
 }
