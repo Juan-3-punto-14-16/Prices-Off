@@ -418,6 +418,7 @@ function iniciarAutocompletado() {
 function mostrarSugerencias(sugerencias, contenedor, input) {
     contenedor.innerHTML = ''; // Limpia sugerencias anteriores
 
+    // Para cada sugerencia, crea un elemento de lista y lo agrega al contenedor
     sugerencias.forEach(sugerencia => {
         const li = document.createElement('LI');
         li.textContent = sugerencia.nombre;
