@@ -22,11 +22,7 @@ class Voto extends ActiveRecord {
             self::$alertas['error'][] = 'El ID del producto es inválido';
         }
 
-        if($this->voto === '') {
-            self::$alertas['error'][] = 'El valor del voto es obligatorio';
-        }
-
-        if ($this->voto !== true && $this->voto !== false && $this->voto !== 'true' && $this->voto !== 'false') {
+        if ($this->voto !== 'true' && $this->voto !== 'false' && $this->voto !== '') {
             self::$alertas['error'][] = 'El valor del voto es inválido';
         }
 
