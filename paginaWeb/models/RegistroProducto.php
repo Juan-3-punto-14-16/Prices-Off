@@ -43,4 +43,12 @@ class RegistroProducto extends ActiveRecord {
 
         return self::$alertas;
     }
+
+    public static function eliminarRegistrosAntiguos() {
+        $query = "DELETE FROM "  . self::$tabla . " WHERE fecharegistro <= CURRENT_DATE - INTERVAL '15 days'";
+        $stmt = self::$db->prepare($query);
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
 }

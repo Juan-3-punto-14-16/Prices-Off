@@ -36,4 +36,18 @@ class Ubicacion extends ActiveRecord {
 
         return self::$alertas;
     }
+
+    public static function eliminarHuerfanos () {
+        $query = "
+            DELETE FROM "  . self::$tabla . " u 
+            WHERE NOT EXISTS (
+                SELECT 1 FROM registroproducto rp
+                WHERE rp.idubicacion = u.id
+                )
+            ";
+        $stmt = self::$db->prepare($query);
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
 }
