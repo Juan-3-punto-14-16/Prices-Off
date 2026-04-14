@@ -181,24 +181,30 @@ class APIController {
         if($voto->id) {
             $votoExistente = Voto::find($voto->id);
 
-            if(!$votoExistente) {
-                echo json_encode(['error' => 'Datos inválidos']);
-                return;
-            }
-
-            if((int)$votoExistente->idregistroproducto !== (int)$voto->idregistroproducto) {
+            if(!$votoExistente || (int)$votoExistente->idregistroproducto !== (int)$voto->idregistroproducto) {
                 echo json_encode(['error' => 'Datos inválidos']);
                 return;
             }
         }
 
-        $resultado = $voto->guardar();
+        $resultado = '';
+        if($voto->voto === '') {
+            if ($voto->id) {
+                $resultado = $voto->eliminar();
+            }
+        } else {
+            $resultado = $voto->guardar();
+        }
 
-        // Fue un registro nuevo, devolvemos el ID y un true en la etiqueta resultado
-        if(!$voto->id) {
-            echo json_encode(['datos' => $resultado]);
-        } else { // Fue una actualización, solo enviamos true en la etiqueta resultado
-            echo json_encode(['datos' => ['resultado' => true]]);
+        if ($voto->voto === '') {
+            echo json_encode(['datos' => ['accion' => 'eliminado']]);
+        } else if (!$voto->id) {
+            echo json_encode(['datos' => [
+                'accion' => 'creado', 
+                'id' => $resultado['id'] 
+            ]]);
+        } else {
+            echo json_encode(['datos' => ['accion' => 'actualizado']]);
         }
     }
 }
