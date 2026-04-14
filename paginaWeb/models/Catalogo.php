@@ -41,4 +41,18 @@ class Catalogo extends ActiveRecord {
         // Primera letra mayuscula y se envia la cadena ya estandarizada
         $this->nombre = ucfirst($this->nombre);
     }
+
+    public static function eliminarHuerfanos () {
+        $query = "
+            DELETE FROM "  . self::$tabla . " c
+            WHERE NOT EXISTS (
+                SELECT 1 FROM registroproducto rp
+                WHERE rp.idcatalogo = c.id
+                )
+            ";
+        $stmt = self::$db->prepare($query);
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    }
 }
