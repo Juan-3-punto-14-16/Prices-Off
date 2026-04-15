@@ -61,7 +61,7 @@ class APIController {
 
         try {
             // Cargamos la configuración desde el archivo .env
-            $projectId = $_ENV['GOOGLE_CLOUD_PROJECT_ID']; 
+            $projectId = $_ENV['GOOGLE_CLOUD_PROJECT_ID'];
             $location = $_ENV['GOOGLE_CLOUD_LOCATION'] ?? 'us';
             $processorId = $_ENV['DOCUMENT_AI_PROCESSOR_ID'];
 
@@ -103,40 +103,7 @@ class APIController {
 
                 // Detectó un artículo comprado (Line Item)
                 if ($tipo === 'line_item') {
-                    // Preparamos un producto base con valores por defecto
-                    $producto = [
-                        'nombre' => '',
-                        'precio' => 0,
-                        'cantidad' => 0,
-                        'unidadmedida' => ''
-                    ];
-
-                    // Los 'line_item' son como cajas pequeñas que tienen más datos adentro.
-                    // Iteramos sobre las "Propiedades" de este producto específico:
-                    foreach ($entity->getProperties() as $propiedad) {
-                        $subTipo = $propiedad->getType();
-                        $textoDetectado = $propiedad->getMentionText();
-
-                        switch ($subTipo) {
-                            case 'line_item/description':
-                                $producto['nombre'] = trim(str_replace("\n", " ", $textoDetectado));
-                                break;
-                                
-                            case 'line_item/amount':
-                                // La IA puede leer "$ 32.50" o "32,50 MNX". 
-                                // filter_var con estos flags "rasura" el texto y deja solo "32.50" en formato float.
-                                $producto['precio'] = (float) filter_var($textoDetectado, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-                                break;
-                                
-                            case 'line_item/quantity':
-                                $producto['cantidad'] = (float) $textoDetectado;
-                                break;
-                                
-                            case 'line_item/unit':
-                                $producto['unidadmedida'] = trim($textoDetectado);
-                                break;
-                        }
-                    }
+                    $producto = self::extraerProductos($entity);
 
                     // Solo aceptamos productos que tengan nombre real Y un precio mayor a cero
                     if ($producto['nombre'] !== '' && $producto['precio'] > 0) {
@@ -165,6 +132,47 @@ class APIController {
             // Si Google falla (sin internet, credenciales mal, etc.)
             echo json_encode(['error' => 'Error al procesar el documento con IA: ' . $e->getMessage()]);
         }
+    }
+
+    // FUNCIÓN HELPER
+    private static function extraerProductos ($entity) {
+        // Preparamos un producto base con valores por defecto
+        $producto = [
+            'nombre' => '',
+            'precio' => 0,
+            'cantidad' => 0,
+            'unidadmedida' => ''
+        ];
+
+        // Los 'line_item' son como cajas pequeñas que tienen más datos adentro.
+        // Iteramos sobre las "Propiedades" de este producto específico:
+        foreach ($entity->getProperties() as $propiedad) {
+            $subTipo = $propiedad->getType();
+            $textoDetectado = $propiedad->getMentionText();
+
+            switch ($subTipo) {
+                case 'line_item/description':
+                    $producto['nombre'] = trim(str_replace("\n", " ", $textoDetectado));
+                    break;
+                    
+                case 'line_item/amount':
+                    $producto['precio'] = (float) filter_var($textoDetectado, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                    break;
+                    
+                case 'line_item/quantity':
+                    $producto['cantidad'] = (float) $textoDetectado;
+                    break;
+                    
+                case 'line_item/unit':
+                    $producto['unidadmedida'] = trim($textoDetectado);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return $producto;
     }
 
     public static function obtenerDireccion() {
