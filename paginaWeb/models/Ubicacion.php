@@ -39,7 +39,7 @@ class Ubicacion extends ActiveRecord {
 
     public static function eliminarHuerfanos () {
         $query = "
-            DELETE FROM "  . self::$tabla . " u 
+            DELETE FROM "  . self::$tabla . " u
             WHERE NOT EXISTS (
                 SELECT 1 FROM registroproducto rp
                 WHERE rp.idubicacion = u.id
