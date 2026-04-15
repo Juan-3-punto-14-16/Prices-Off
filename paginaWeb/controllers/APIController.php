@@ -8,6 +8,10 @@ use Model\Ubicacion;
 use Model\ViewModel;
 use Model\Voto;
 
+use Google\Cloud\DocumentAI\V1\Client\DocumentProcessorServiceClient;
+use Google\Cloud\DocumentAI\V1\RawDocument;
+use Google\Cloud\DocumentAI\V1\ProcessRequest;
+
 class APIController {
     public static function autocompletar() {
         $nombre = trim($_GET['nombre'] ?? '');
@@ -42,7 +46,125 @@ class APIController {
     }
 
     public static function escanear() {
-        // TODO: Pendiente de implementar lógica
+        // Verificamos que el archivo "ticket" exista y no tenga errores de subida
+        if (!isset($_FILES['ticket']) || $_FILES['ticket']['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['error' => 'No se recibió ninguna imagen válida']);
+            return;
+        }
+
+        // Extraemos el archivo de la memoria temporal de tu computadora
+        $archivoTemporal = $_FILES['ticket']['tmp_name'];
+
+        // Convertimos la imagen a código puro (bytes) y detectamos su formato
+        $contenidoImagen = file_get_contents($archivoTemporal);
+        $mimeType = mime_content_type($archivoTemporal);
+
+        try {
+            // Cargamos la configuración desde el archivo .env
+            $projectId = $_ENV['GOOGLE_CLOUD_PROJECT_ID']; 
+            $location = $_ENV['GOOGLE_CLOUD_LOCATION'] ?? 'us';
+            $processorId = $_ENV['DOCUMENT_AI_PROCESSOR_ID'];
+
+            // Construimos la ruta real a tu archivo JSON de credenciales
+            $rutaCredenciales = __DIR__ . '/../' . $_ENV['GOOGLE_APPLICATION_CREDENTIALS'];
+
+            // Creamos el Cliente para hablar con Google
+            $client = new DocumentProcessorServiceClient([
+                'credentials' => $rutaCredenciales
+            ]);
+
+            // Generamos el "Nombre Completo" del procesador
+            // Google necesita el formato: projects/ID/locations/LOC/processors/ID
+            $nombreProcesador = $client->processorName($projectId, $location, $processorId);
+
+            // Crear el Sobre para tu imagen (RawDocument)
+            $rawDocument = new RawDocument();
+            $rawDocument->setContent($contenidoImagen);
+            $rawDocument->setMimeType($mimeType);
+
+            // 9. Crear la "Orden de Trabajo" (ProcessRequest)
+            $request = new ProcessRequest([
+                'name' => $nombreProcesador,
+                'raw_document' => $rawDocument
+            ]);
+
+            // Enviar a Google
+            $response = $client->processDocument($request);
+
+            // Recibir y abrir el documento ya analizado por la IA
+            $document = $response->getDocument();
+
+            // Preparamos nuestro "molde" limpio para enviar al Frontend
+            $datos = ['productos' => []];
+
+            // Recorremos todas las "Entidades" que la IA detectó en el ticket
+            foreach ($document->getEntities() as $entity) {
+                $tipo = $entity->getType();
+
+                // Detectó un artículo comprado (Line Item)
+                if ($tipo === 'line_item') {
+                    // Preparamos un producto base con valores por defecto
+                    $producto = [
+                        'nombre' => '',
+                        'precio' => 0,
+                        'cantidad' => 0,
+                        'unidadmedida' => ''
+                    ];
+
+                    // Los 'line_item' son como cajas pequeñas que tienen más datos adentro.
+                    // Iteramos sobre las "Propiedades" de este producto específico:
+                    foreach ($entity->getProperties() as $propiedad) {
+                        $subTipo = $propiedad->getType();
+                        $textoDetectado = $propiedad->getMentionText();
+
+                        switch ($subTipo) {
+                            case 'line_item/description':
+                                $producto['nombre'] = trim(str_replace("\n", " ", $textoDetectado));
+                                break;
+                                
+                            case 'line_item/amount':
+                                // La IA puede leer "$ 32.50" o "32,50 MNX". 
+                                // filter_var con estos flags "rasura" el texto y deja solo "32.50" en formato float.
+                                $producto['precio'] = (float) filter_var($textoDetectado, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                                break;
+                                
+                            case 'line_item/quantity':
+                                $producto['cantidad'] = (float) $textoDetectado;
+                                break;
+                                
+                            case 'line_item/unit':
+                                $producto['unidadmedida'] = trim($textoDetectado);
+                                break;
+                        }
+                    }
+
+                    // Solo aceptamos productos que tengan nombre real Y un precio mayor a cero
+                    if ($producto['nombre'] !== '' && $producto['precio'] > 0) {
+                        
+                        // Si la IA mandó cantidad 0, lo corregimos a 1 por sentido común
+                        if ($producto['cantidad'] == 0) {
+                            $producto['cantidad'] = 1;
+                        }
+                        
+                        // Solo si pasa nuestras reglas, lo guardamos en la lista final
+                        $datos['productos'][] = $producto;
+                    }
+                }
+            }
+
+            // Colgamos el "teléfono" para liberar memoria en el servidor
+            $client->close();
+
+            // Enviamos el JSON perfecto y estructurado al Frontend
+            echo json_encode([
+                'mensaje' => 'Ticket procesado con éxito',
+                'datos' => $datos
+            ]);
+
+        } catch (\Exception $e) {
+            // Si Google falla (sin internet, credenciales mal, etc.)
+            echo json_encode(['error' => 'Error al procesar el documento con IA: ' . $e->getMessage()]);
+        }
     }
 
     public static function obtenerDireccion() {
@@ -198,10 +320,10 @@ class APIController {
 
         if ($voto->voto === '') {
             echo json_encode(['datos' => ['accion' => 'eliminado']]);
-        } else if (!$voto->id) {
+        } elseif (!$voto->id) {
             echo json_encode(['datos' => [
-                'accion' => 'creado', 
-                'id' => $resultado['id'] 
+                'accion' => 'creado',
+                'id' => $resultado['id']
             ]]);
         } else {
             echo json_encode(['datos' => ['accion' => 'actualizado']]);
