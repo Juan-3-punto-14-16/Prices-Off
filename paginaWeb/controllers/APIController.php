@@ -97,6 +97,9 @@ class APIController {
             // Preparamos nuestro "molde" limpio para enviar al Frontend
             $datos = ['productos' => []];
 
+            // Aquí guardaremos temporalmente los nombres sin precio
+            $productoPendiente = null;
+
             // Recorremos todas las "Entidades" que la IA detectó en el ticket
             foreach ($document->getEntities() as $entity) {
                 $tipo = $entity->getType();
@@ -105,16 +108,38 @@ class APIController {
                 if ($tipo === 'line_item') {
                     $producto = self::extraerProductos($entity);
 
-                    // Solo aceptamos productos que tengan nombre real Y un precio mayor a cero
+                    // Ignorar rebajas totalmente (precios negativos)
+                    if ($producto['precio'] < 0) {
+                        continue; // Salta al siguiente ciclo del foreach, ignorando esta línea
+                    }
+
+                    // Producto Perfecto (Tiene nombre Y precio en la misma línea)
                     if ($producto['nombre'] !== '' && $producto['precio'] > 0) {
-                        
-                        // Si la IA mandó cantidad 0, lo corregimos a 1 por sentido común
-                        if ($producto['cantidad'] == 0) {
-                            $producto['cantidad'] = 1;
-                        }
-                        
-                        // Solo si pasa nuestras reglas, lo guardamos en la lista final
                         $datos['productos'][] = $producto;
+                        $productoPendiente = null; // Limpiamos la sala de espera por seguridad
+
+                    } elseif ($producto['nombre'] !== '' && $producto['precio'] == 0) { // Nombre Huérfano (Tiene nombre, pero el precio es 0)
+                        // Lo metemos a la sala de espera para el siguiente ciclo
+                        $productoPendiente = $producto; 
+
+                    } elseif ($producto['nombre'] === '' && $producto['precio'] > 0) {
+                        // Si hay alguien en la sala de espera, es su pareja perfecta
+                        if ($productoPendiente !== null) {
+                            
+                            // Fusionamos los datos: Le pasamos el precio, cantidad y unidad al nombre que estaba esperando
+                            $productoPendiente['precio'] = $producto['precio'];
+                            $productoPendiente['cantidad'] = $producto['cantidad'] > 0 ? $producto['cantidad'] : 1;
+                            
+                            if ($producto['unidadmedida'] !== '') {
+                                $productoPendiente['unidadmedida'] = $producto['unidadmedida'];
+                            }
+
+                            // ¡Listo! El producto está completo, lo guardamos en la lista final
+                            $datos['productos'][] = $productoPendiente;
+
+                            // Vaciamos la sala de espera
+                            $productoPendiente = null;
+                        }
                     }
                 }
             }
@@ -140,7 +165,7 @@ class APIController {
         $producto = [
             'nombre' => '',
             'precio' => 0,
-            'cantidad' => 0,
+            'cantidad' => 1,
             'unidadmedida' => ''
         ];
 
