@@ -33,7 +33,7 @@ class APIController {
             return;
         }
 
-        $resultados = ViewModel::consulta($nombre);
+        $resultados = ViewModel::buscarProductos($nombre);
         if(empty($resultados)) {
             echo json_encode(['error' => ['No se encontraron productos con ese nombre']]);
             return;
@@ -52,7 +52,7 @@ class APIController {
             return;
         }
 
-        // Extraemos el archivo de la memoria temporal de tu computadora
+        // Extraemos el archivo de la memoria temporal de la computadora
         $archivoTemporal = $_FILES['ticket']['tmp_name'];
 
         // Convertimos la imagen a código puro (bytes) y detectamos su formato
@@ -69,15 +69,12 @@ class APIController {
             $rutaCredenciales = __DIR__ . '/../' . $_ENV['GOOGLE_APPLICATION_CREDENTIALS'];
 
             // Creamos el Cliente para hablar con Google
-            $client = new DocumentProcessorServiceClient([
-                'credentials' => $rutaCredenciales
-            ]);
+            $client = new DocumentProcessorServiceClient(['credentials' => $rutaCredenciales]);
 
             // Generamos el "Nombre Completo" del procesador
-            // Google necesita el formato: projects/ID/locations/LOC/processors/ID
             $nombreProcesador = $client->processorName($projectId, $location, $processorId);
 
-            // Crear el Sobre para tu imagen (RawDocument)
+            // Crear el Sobre para la imagen (RawDocument)
             $rawDocument = new RawDocument();
             $rawDocument->setContent($contenidoImagen);
             $rawDocument->setMimeType($mimeType);
@@ -106,98 +103,22 @@ class APIController {
 
                 // Detectó un artículo comprado (Line Item)
                 if ($tipo === 'line_item') {
-                    $producto = self::extraerProductos($entity);
-
-                    // Ignorar rebajas totalmente (precios negativos)
-                    if ($producto['precio'] < 0) {
-                        continue; // Salta al siguiente ciclo del foreach, ignorando esta línea
-                    }
-
-                    // Producto Perfecto (Tiene nombre Y precio en la misma línea)
-                    if ($producto['nombre'] !== '' && $producto['precio'] > 0) {
-                        $datos['productos'][] = $producto;
-                        $productoPendiente = null; // Limpiamos la sala de espera por seguridad
-
-                    } elseif ($producto['nombre'] !== '' && $producto['precio'] == 0) { // Nombre Huérfano (Tiene nombre, pero el precio es 0)
-                        // Lo metemos a la sala de espera para el siguiente ciclo
-                        $productoPendiente = $producto; 
-
-                    } elseif ($producto['nombre'] === '' && $producto['precio'] > 0) {
-                        // Si hay alguien en la sala de espera, es su pareja perfecta
-                        if ($productoPendiente !== null) {
-                            
-                            // Fusionamos los datos: Le pasamos el precio, cantidad y unidad al nombre que estaba esperando
-                            $productoPendiente['precio'] = $producto['precio'];
-                            $productoPendiente['cantidad'] = $producto['cantidad'] > 0 ? $producto['cantidad'] : 1;
-                            
-                            if ($producto['unidadmedida'] !== '') {
-                                $productoPendiente['unidadmedida'] = $producto['unidadmedida'];
-                            }
-
-                            // ¡Listo! El producto está completo, lo guardamos en la lista final
-                            $datos['productos'][] = $productoPendiente;
-
-                            // Vaciamos la sala de espera
-                            $productoPendiente = null;
-                        }
-                    }
+                    $producto = self::extraerLineItem($entity);
+                    self::procesarLineItem($producto, $datos, $productoPendiente);
                 }
             }
 
-            // Colgamos el "teléfono" para liberar memoria en el servidor
+            // Colgamos para liberar memoria en el servidor
             $client->close();
 
-            // Enviamos el JSON perfecto y estructurado al Frontend
             echo json_encode([
                 'mensaje' => 'Ticket procesado con éxito',
                 'datos' => $datos
             ]);
 
         } catch (\Exception $e) {
-            // Si Google falla (sin internet, credenciales mal, etc.)
             echo json_encode(['error' => 'Error al procesar el documento con IA: ' . $e->getMessage()]);
         }
-    }
-
-    // FUNCIÓN HELPER
-    private static function extraerProductos ($entity) {
-        // Preparamos un producto base con valores por defecto
-        $producto = [
-            'nombre' => '',
-            'precio' => 0,
-            'cantidad' => 1,
-            'unidadmedida' => ''
-        ];
-
-        // Los 'line_item' son como cajas pequeñas que tienen más datos adentro.
-        // Iteramos sobre las "Propiedades" de este producto específico:
-        foreach ($entity->getProperties() as $propiedad) {
-            $subTipo = $propiedad->getType();
-            $textoDetectado = $propiedad->getMentionText();
-
-            switch ($subTipo) {
-                case 'line_item/description':
-                    $producto['nombre'] = trim(str_replace("\n", " ", $textoDetectado));
-                    break;
-                    
-                case 'line_item/amount':
-                    $producto['precio'] = (float) filter_var($textoDetectado, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-                    break;
-                    
-                case 'line_item/quantity':
-                    $producto['cantidad'] = (float) $textoDetectado;
-                    break;
-                    
-                case 'line_item/unit':
-                    $producto['unidadmedida'] = trim($textoDetectado);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-
-        return $producto;
     }
 
     public static function obtenerDireccion() {
@@ -273,7 +194,126 @@ class APIController {
         echo json_encode(['mensaje' => 'Todos los productos fueron registrados']);
     }
 
-    // FUNCIÓN HELPER
+    public static function registrarVoto() {
+        $voto = new Voto($_POST);
+        $erroresVoto = $voto->validar();
+
+        if(!empty($erroresVoto)) {
+            echo json_encode(['error' => $erroresVoto['error']]);
+            return;
+        }
+
+        if($voto->id) {
+            $votoExistente = Voto::find($voto->id);
+
+            if(!$votoExistente || (int)$votoExistente->idregistroproducto !== (int)$voto->idregistroproducto) {
+                echo json_encode(['error' => 'Datos inválidos']);
+                return;
+            }
+        }
+
+        $resultado = '';
+        if($voto->voto === '') {
+            if ($voto->id) {
+                $resultado = $voto->eliminar();
+            }
+        } else {
+            $resultado = $voto->guardar();
+        }
+
+        if ($voto->voto === '') {
+            echo json_encode(['datos' => ['accion' => 'eliminado']]);
+        } elseif (!$voto->id) {
+            echo json_encode(['datos' => [
+                'accion' => 'creado',
+                'id' => $resultado['id']
+            ]]);
+        } else {
+            echo json_encode(['datos' => ['accion' => 'actualizado']]);
+        }
+    }
+
+    // FUNCIONES HELPER 
+    // Estas funciones (junto con otras partes del código de este .php) deberían en teoría
+    // pertenecer a una carpeta llamada "Services", pero esto queda fuera del alcance del proyecto...
+    private static function extraerLineItem ($entity) {
+        // Preparamos un producto base con valores por defecto
+        $producto = [
+            'nombre' => '',
+            'precio' => 0,
+            'cantidad' => 1,
+            'unidadmedida' => ''
+        ];
+
+        // Los 'line_item' son como cajas pequeñas que tienen más datos adentro.
+        // Iteramos sobre las "Propiedades" de este producto específico:
+        foreach ($entity->getProperties() as $propiedad) {
+            $subTipo = $propiedad->getType();
+            $textoDetectado = $propiedad->getMentionText();
+
+            switch ($subTipo) {
+                case 'line_item/description':
+                    $producto['nombre'] = trim(str_replace("\n", " ", $textoDetectado));
+                    break;
+                    
+                case 'line_item/amount':
+                    $producto['precio'] = (float) filter_var($textoDetectado, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                    break;
+                    
+                case 'line_item/quantity':
+                    $producto['cantidad'] = (float) $textoDetectado;
+                    break;
+                    
+                case 'line_item/unit':
+                    $producto['unidadmedida'] = trim($textoDetectado);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return $producto;
+    }
+
+    private static function procesarLineItem ($producto, &$datos, &$productoPendiente) {
+        // Ignorar rebajas totalmente (precios negativos)
+        if ($producto['precio'] < 0) {
+            return;
+        }
+
+        // Producto Perfecto (Tiene nombre Y precio en la misma línea)
+        if ($producto['nombre'] !== '' && $producto['precio'] > 0) {
+            $datos['productos'][] = $producto;
+            $productoPendiente = null; // Limpiamos la sala de espera por seguridad
+            return;
+        }
+
+        // Nombre Huérfano (Tiene nombre, pero el precio es 0)
+        if ($producto['nombre'] !== '' && $producto['precio'] == 0) { 
+            // Lo metemos a la sala de espera para el siguiente ciclo
+            $productoPendiente = $producto;
+            return;
+        }
+
+        // Si hay alguien en la sala de espera, es su pareja perfecta
+        if ($producto['nombre'] === '' && $producto['precio'] > 0 && $productoPendiente !== null) {
+            // Fusionamos los datos: Le pasamos el precio, cantidad y unidad al nombre que estaba esperando
+            $productoPendiente['precio'] = $producto['precio'];
+            $productoPendiente['cantidad'] = $producto['cantidad'] > 0 ? $producto['cantidad'] : 1;
+            
+            if ($producto['unidadmedida'] !== '') {
+                $productoPendiente['unidadmedida'] = $producto['unidadmedida'];
+            }
+
+            // ¡Listo! El producto está completo, lo guardamos en la lista final
+            $datos['productos'][] = $productoPendiente;
+
+            // Vaciamos la sala de espera
+            $productoPendiente = null;
+        }
+    }
+
     private static function procesarListaProductos($productos, $idubicacion) {
         foreach($productos as $producto) {
             // Se crea el producto y el mismo normaliza su nombre en el constructor
@@ -322,44 +362,5 @@ class APIController {
         // Entonces sí, ejecutamos todos los query en la BD se vuelven PERMANENTES
         ActiveRecord::confirmarTransaccion();
         return true;
-    }
-
-    public static function registrarVoto() {
-        $voto = new Voto($_POST);
-        $erroresVoto = $voto->validar();
-
-        if(!empty($erroresVoto)) {
-            echo json_encode(['error' => $erroresVoto['error']]);
-            return;
-        }
-
-        if($voto->id) {
-            $votoExistente = Voto::find($voto->id);
-
-            if(!$votoExistente || (int)$votoExistente->idregistroproducto !== (int)$voto->idregistroproducto) {
-                echo json_encode(['error' => 'Datos inválidos']);
-                return;
-            }
-        }
-
-        $resultado = '';
-        if($voto->voto === '') {
-            if ($voto->id) {
-                $resultado = $voto->eliminar();
-            }
-        } else {
-            $resultado = $voto->guardar();
-        }
-
-        if ($voto->voto === '') {
-            echo json_encode(['datos' => ['accion' => 'eliminado']]);
-        } elseif (!$voto->id) {
-            echo json_encode(['datos' => [
-                'accion' => 'creado',
-                'id' => $resultado['id']
-            ]]);
-        } else {
-            echo json_encode(['datos' => ['accion' => 'actualizado']]);
-        }
     }
 }
