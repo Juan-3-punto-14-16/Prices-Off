@@ -37,7 +37,7 @@ class ViewModel extends ActiveRecord {
     }
 
     // ESTA CONSULTA ESTA OPTIMIZADA PARA POSTGRES
-    public static function consulta ($nombre) {
+    public static function buscarProductos ($nombre) {
         $query = "
             SELECT
                 rp.id,
@@ -60,6 +60,6 @@ class ViewModel extends ActiveRecord {
             ORDER BY preciounitario
         ";
 
-        return self::SQL($query);
+        return self::sql($query);
     }
 }
