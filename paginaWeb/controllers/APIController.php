@@ -222,18 +222,18 @@ class APIController {
         }
 
         if ($voto->voto === '') {
-            echo json_encode(['datos' => ['accion' => 'eliminado']]);
+            echo json_encode(['mensaje' => 'eliminado']);
         } elseif (!$voto->id) {
-            echo json_encode(['datos' => [
-                'accion' => 'creado',
+            echo json_encode([
+                'mensaje' => 'creado',
                 'id' => $resultado['id']
-            ]]);
+                ]);
         } else {
-            echo json_encode(['datos' => ['accion' => 'actualizado']]);
+            echo json_encode(['mensaje' => 'actualizado']);
         }
     }
 
-    // FUNCIONES HELPER 
+    // FUNCIONES HELPER
     // Estas funciones (junto con otras partes del código de este .php) deberían en teoría
     // pertenecer a una carpeta llamada "Services", pero esto queda fuera del alcance del proyecto...
     private static function extraerLineItem ($entity) {
@@ -290,7 +290,7 @@ class APIController {
         }
 
         // Nombre Huérfano (Tiene nombre, pero el precio es 0)
-        if ($producto['nombre'] !== '' && $producto['precio'] == 0) { 
+        if ($producto['nombre'] !== '' && $producto['precio'] == 0) {
             // Lo metemos a la sala de espera para el siguiente ciclo
             $productoPendiente = $producto;
             return;
