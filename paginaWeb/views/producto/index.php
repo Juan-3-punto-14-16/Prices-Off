@@ -1,6 +1,6 @@
 <div class="inicio_busqueda" id="contenedor_principal">
 
-    <div class="contenedor_mapa_fondo"></div>
+    <div class="contenedor_mapa_fondo" id="mapa_inicio"></div>
     <div class="bloque_central">
         <form class="formulario_inicio">
             <div class="input_grupo">

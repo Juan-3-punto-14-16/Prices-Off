@@ -177,6 +177,7 @@
     top: 2rem;
     left: 50%;
     transform: translateX(-50%); 
+    z-index: 2000;
     
     width: 80%;
     max-width: 1000px;
@@ -196,4 +197,19 @@
     border: 2px solid v.$negro;
     background-color: v.$gris;
     z-index: 1;
+}
+.popup_grande {
+    .leaflet-popup-content {
+        font-size: 1rem;
+        line-height: 1.0;  
+        text-align: center; 
+        color: v.$negro;
+        margin: 1rem; 
+    }
+    b {
+        font-size: 1.3rem;
+        color: v.$amarillo; 
+        display: block;
+        margin-bottom: 0.5rem;
+    }
 }

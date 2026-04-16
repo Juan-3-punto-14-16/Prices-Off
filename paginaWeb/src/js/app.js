@@ -13,6 +13,7 @@ function iniciarApp() {
     enviarProductosFetch();
     iniciarMecanismoVotos();
     iniciarAutocompletado();
+    iniciarMapas();
 }
 
 function iniciarFormularioProductos() {
@@ -438,4 +439,120 @@ function mostrarSugerencias(sugerencias, contenedor, input) {
         });
         contenedor.appendChild(li);
     });
+}
+function iniciarMapas() {
+    // 1. MAPA PARA LA VISTA DE "AGREGAR PRODUCTO" (agregar.php)
+    if (document.querySelector('#mapa')) {
+        let lat = 20.655262; // Usando las coordenadas que ya tenías de prueba
+        let lng = -103.325492;
+        
+        const mapa = L.map('mapa').setView([lat, lng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapa);
+
+        // Pin que el usuario moverá
+        let marker = L.marker([lat, lng], {
+            draggable: true 
+        }).addTo(mapa);
+
+        const obtenerDireccion = async (latitud, longitud) => {
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitud}&lon=${longitud}&zoom=18&addressdetails=1`;
+                const respuesta = await fetch(url);
+                const resultado = await respuesta.json();
+                
+                if(resultado && resultado.display_name) {
+                    // Mostramos la dirección en un pequeño globo de texto sobre el pin
+                    marker.bindPopup(`<b>Ubicación seleccionada:</b><br>${resultado.display_name}`, {
+                        minwidth: 250,
+                        maxwidth: 400,
+                        className: 'popup_grande'
+                    }).openPopup();
+                }
+            } catch (error) {
+                console.log("Error obteniendo la dirección:", error);
+            }
+        };
+
+        // Pedir permisos de ubicación actual
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (posicion) => {
+                    // Si el usuario acepta, actualizamos las coordenadas
+                    lat = posicion.coords.latitude;
+                    lng = posicion.coords.longitude;
+                    
+                    // Movemos el mapa y el pin a su ubicación real
+                    mapa.setView([lat, lng], 16);
+                    marker.setLatLng([lat, lng]);
+                    
+                    // Obtenemos el nombre de su calle
+                    obtenerDireccion(lat, lng);
+                },
+                (error) => {
+                    // Si rechaza el permiso o falla, usamos las de por defecto y sacamos su dirección
+                    console.log("Permiso de ubicación denegado, usando coordenadas por defecto.");
+                    obtenerDireccion(lat, lng);
+                }
+            );
+        } else {
+            // Si el navegador es muy viejo y no soporta geolocalización
+            obtenerDireccion(lat, lng);
+        }
+
+        //Detectar cuando el usuario suelta el pin en otro lado -
+        marker.on('moveend', function() {
+            const posicion = marker.getLatLng();
+            console.log("Nueva ubicación -> Lat: " + posicion.lat + ", Lng: " + posicion.lng);
+            
+            // Llamamos a la API para traducir la nueva ubicación
+            obtenerDireccion(posicion.lat, posicion.lng);
+        });
+    }
+
+    // 2. MAPA PARA LA VISTA DE "INICIO / RESULTADOS" (index.php)
+    if (document.querySelector('#mapa_resultados')) {
+        const lat = 20.655262;
+        const lng = -103.325492;
+
+        const mapaBusqueda = L.map('mapa_resultados').setView([lat, lng], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapaBusqueda);
+
+        // Cuando tu contenedor del mapa cambia de "display: none" a "flex/block", 
+        // Leaflet a veces se "rompe" y se ve gris
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.classList.contains('resultados_activos')) {
+                    setTimeout(() => {
+                        mapaBusqueda.invalidateSize();
+                    }, 100); // recalcule su tamaño
+                }
+            });
+        });
+
+        const contenedorPrincipal = document.querySelector('#contenedor_principal');
+        if(contenedorPrincipal) {
+            observer.observe(contenedorPrincipal, { attributes: true, attributeFilter: ['class'] });
+        }
+    }
+
+    // 3. MAPA PARA EL FONDO DE LA PÁGINA DE INICIO 
+    if (document.querySelector('#mapa_inicio')) {
+        const lat = 20.655262; 
+        const lng = -103.325492; 
+
+        const mapaInicio = L.map('mapa_inicio', {
+            zoomControl: false, // Quitamos los botones de + y - para que se vea más limpio
+            scrollWheelZoom: false // Evitamos que el usuario haga zoom por accidente al scrollear
+        }).setView([lat, lng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapaInicio);
+    }
 }
