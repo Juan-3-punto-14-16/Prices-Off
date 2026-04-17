@@ -3,9 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 let productosActuales = [];
+let busquedaActual = '';
 // CAMBIAR: latitud y longitud de prueba 20.655262648774382, -103.32549261971924
 let latitud = 20.655262;
 let longitud = -103.325492;
+let direccionActual = "Dirección no encontrada";
 let intervaloGPS;
 let mapa;
 let marker;
@@ -143,17 +145,7 @@ async function enviarProductosFetch() {
     formulario.addEventListener('submit', async function (evento) {
         evento.preventDefault(); // Evita recargar
 
-        let direccionObtenida = "Dirección no encontrada";
-
         try {
-            const urlDireccion = `/api/direccion?latitud=${latitud}&longitud=${longitud}`;
-            const respuestaDireccion = await fetch(urlDireccion);
-            const datosDireccion = await respuestaDireccion.json();
-
-            if (datosDireccion.direccion) {
-                direccionObtenida = datosDireccion.direccion;
-            }
-
             const filas = document.querySelectorAll('.producto_fila');
             const productos = [];
 
@@ -173,7 +165,7 @@ async function enviarProductosFetch() {
             datos.append('productos', JSON.stringify(productos)); // Agrega el arreglo de productos como JSON
             datos.append('latitud', latitud);
             datos.append('longitud', longitud);
-            datos.append('direccion', direccionObtenida); // Agrega la dirección obtenida de la API
+            datos.append('direccion', direccionActual); // Agrega la dirección obtenida de la API
 
             const url = '/api/guardar';
             const respuesta = await fetch(url, {
@@ -269,6 +261,7 @@ function mostrarTarjetas(productos, latU, lonU) {
 
 async function buscarYMostrarResultados(textoBuscado) {
     try {
+        busquedaActual = textoBuscado; // Guarda el término de búsqueda actual para usarlo después
         const url = `/api/buscar?nombre=${textoBuscado}`;
         const respuesta = await fetch(url);
         const resultado = await respuesta.json();
@@ -371,10 +364,9 @@ async function registrarVotoFetch(idProducto, votoNuevo, boton) {
                 });
             }
             localStorage.setItem('votos_pricesoff', JSON.stringify(almacenamiento));
-            // Para no recargar todo, refresca solo el conteo de votos
-            const inputBusqueda = document.querySelector('input[name="query"]');
-            if (inputBusqueda && inputBusqueda.value) {
-                buscarYMostrarResultados(document.querySelector('input[name="query"]').value);
+            // Refresca los resultados para mostrar el nuevo conteo de votos
+            if(busquedaActual){
+                buscarYMostrarResultados(busquedaActual);
             }
         }
 
@@ -489,6 +481,7 @@ async function obtenerDireccion(lat, lng) {
         const datos = await respuesta.json();
 
         if (datos.direccion && marker) {
+            direccionActual = datos.direccion;
             // Mostramos la dirección en un pequeño globo de texto sobre el pin
             marker.bindPopup(`<b>Ubicación seleccionada:</b><br>${datos.direccion}`, {
                 minwidth: 250,
