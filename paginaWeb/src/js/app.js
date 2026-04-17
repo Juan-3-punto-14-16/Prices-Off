@@ -6,14 +6,59 @@ let productosActuales = [];
 // CAMBIAR: latitud y longitud de prueba 20.655262648774382, -103.32549261971924
 let latitud = 20.655262;
 let longitud = -103.325492;
+let intervaloGPS;
+let mapa;
+let marker;
 
 function iniciarApp() {
+    iniciarRastreoUbicacion();
     iniciarFormularioProductos();
     iniciarBuscadorInicio();
     enviarProductosFetch();
     iniciarMecanismoVotos();
     iniciarAutocompletado();
     iniciarMapas();
+}
+
+function iniciarRastreoUbicacion() {
+    if ("geolocation" in navigator) {
+        // Ejecutamos una primera vez de inmediato
+        actualizarCoordenadas();
+        // Configura el intervalo para cada 5 minutos (300000 ms)
+        intervaloGPS = setInterval(() => {
+            actualizarCoordenadas();
+        }, 300000);
+    } else {
+        console.log("Geolocalización no disponible en este navegador.");
+    }
+}
+
+function actualizarCoordenadas() {
+    // Intenta obtener la ubicación actual del usuario
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            latitud = pos.coords.latitude;
+            longitud = pos.coords.longitude;
+            console.log(`Ubicación actualizada: ${latitud}, ${longitud}`);
+
+            // Si el mapa y el marcador ya están definidos, los actualizamos a la nueva ubicación
+            if (typeof mapa !== 'undefined' && marker) {
+                const nuevaPos = [latitud, longitud];
+                mapa.setView(nuevaPos, 16);
+                marker.setLatLng(nuevaPos);
+                // Actualiza la dirección de Google Maps para esa nueva posición
+                obtenerDireccion(latitud, longitud);
+                // Si el mapa de resultados está activo, también lo actualizamos para que el usuario vea su nueva ubicación
+                if (mapa) {
+                    mapa.panTo([latitud, longitud]);
+                }
+            }
+        },
+        (error) => {
+            console.warn("No se pudo actualizar la ubicación, manteniendo última conocida");
+        },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 } // Opciones para mejorar la eficiencia del GPS
+    );
 }
 
 function iniciarFormularioProductos() {
@@ -170,11 +215,17 @@ function mostrarTarjetas(productos, latU, lonU) {
     }
 
     productos.forEach(producto => {
+        // Verifica si el usuario ya votó por este producto consultando el localStorage
+        const almacenamiento = JSON.parse(localStorage.getItem('votos_pricesoff')) || {};
+        const registroVoto = almacenamiento[producto.id];
+        const miVoto = registroVoto ? registroVoto.voto : null;
+
+        // Si el usuario ya votó, aplicamos un estilo diferente al botón correspondiente
+        const colorLike = miVoto === 'true' ? 'style="color: #2ecc71"' : '';
+        const colorDislike = miVoto === 'false' ? 'style="color: #e74c3c"' : '';
+
         // Calcula la distancia real entre el usuario y el producto usando sus coordenadas
         const distanciaReal = calcularDistancia(latU, lonU, producto.latitud, producto.longitud);
-        // Verifica si el usuario ya votó por este producto consultando el localStorage
-        const votosRealizados = JSON.parse(localStorage.getItem('votos_pricesoff')) || [];
-        const yaVoto = votosRealizados.includes(producto.id.toString());
 
         const card = document.createElement('DIV');
         card.classList.add('card_producto');
@@ -190,14 +241,14 @@ function mostrarTarjetas(productos, latU, lonU) {
 
             <div class="card_footer">
                 <div class="reacciones">
-                    <button class="icon_btn btn_votar" data-id="${producto.id}" data-voto="true" ${yaVoto ? 'disabled style="color: #2ecc71"' : ''}>
+                    <button class="icon_btn btn_votar" data-id="${producto.id}" data-voto="true" ${colorLike}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7 10v12" />
                             <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
                         </svg>
                         <span class="conteo_votos">${producto.votospositivos}</span>
                     </button>
-                    <button class="icon_btn btn_votar" data-id="${producto.id}" data-voto="false" ${yaVoto ? 'disabled style="color: #2ecc71"' : ''}>
+                    <button class="icon_btn btn_votar" data-id="${producto.id}" data-voto="false" ${colorDislike}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 14V2" />
                             <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
@@ -226,43 +277,7 @@ async function buscarYMostrarResultados(textoBuscado) {
         // Guarda los productos actuales para ordenarlos despues sin tener que hacer otra consulta
         productosActuales = resultado.datos;
         const metodoActual = document.querySelector('#orden').value; // Método de ordenamiento actual
-
-        // Intenta obtener la ubicación del usuario, si el navegador lo permite y el usuario lo autoriza
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    latitud = pos.coords.latitude;
-                    longitud = pos.coords.longitude;
-                    ordenarResultados(metodoActual); // Reordena resultados                   
-                },
-                (error) => {
-                    // Si rechaza, usamos coordenadas por defecto
-                    Swal.fire({
-                        icon: 'info',
-                        title: '¡Permisos de ubicación denegados!',
-                        text: 'Se usarán coordenadas por defecto.',
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        toast: true
-                    });
-                    ordenarResultados(metodoActual);
-                }
-            );
-        }
-        else {
-            // Si el navegador no soporta geolocalización, usamos coordenadas por defecto
-            Swal.fire({
-                icon: 'info',
-                title: '¡Ubicación no disponible!',
-                text: 'Se usarán coordenadas por defecto.',
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 4000,
-                toast: true
-            });
-            ordenarResultados(metodoActual);
-        }
+        ordenarResultados(metodoActual);
     }
     catch (error) {
         console.error("Error al obtener los productos:", error);
@@ -298,25 +313,29 @@ function iniciarMecanismoVotos() {
     }
 }
 
-async function registrarVotoFetch(idProducto, voto, boton) {
-    const votosRealizados = JSON.parse(localStorage.getItem('votos_pricesoff')) || [];
-
-    if (votosRealizados.includes(idProducto.toString())) {
-        Swal.fire({
-            icon: 'info',
-            title: '¡Ya votaste!',
-            text: 'Solo puedes votar una vez por producto.',
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            toast: true
-        });
-        return;
-    }
+async function registrarVotoFetch(idProducto, votoNuevo, boton) {
+    // Obtiene objeto de votos
+    const almacenamiento = JSON.parse(localStorage.getItem('votos_pricesoff')) || {};
+    const votoPrevio = almacenamiento[idProducto];
 
     const datos = new FormData();
     datos.append('idregistroproducto', idProducto);
-    datos.append('voto', voto);
+
+    if (votoPrevio) {
+        // Si el usuario presionó el mismo botón de voto que antes, se elimina el voto
+        if (votoPrevio.voto === votoNuevo) {
+            datos.append('id', votoPrevio.id); // ID del voto a eliminar
+            datos.append('voto', '');
+        } else {
+            // Si el usuario cambia su voto (like por dislike o viceversa), se actualiza el voto
+            datos.append('id', votoPrevio.id); // ID del voto a actualizar
+            datos.append('voto', votoNuevo);
+        }
+    } else {
+        // Si es el primer voto del usuario para este producto, se crea
+        datos.append('voto', votoNuevo);
+    }
+    console.log("Enviando voto -> ID Producto:", idProducto, "Voto:", votoNuevo, "ID Voto Previo:", votoPrevio ? votoPrevio.id : "N/A");
 
     try {
         const url = '/api/votos';
@@ -325,30 +344,41 @@ async function registrarVotoFetch(idProducto, voto, boton) {
             body: datos
         });
         const resultado = await respuesta.json();
-
-        if (resultado.datos) {
-            // Guarda en localStorage el ID del producto ya votado
-            votosRealizados.push(idProducto.toString());
-            localStorage.setItem('votos_pricesoff', JSON.stringify(votosRealizados));
-
-            // Actualiza la interfaz
-            const conteoSpan = boton.querySelector('.conteo_votos');
-            conteoSpan.textContent = parseInt(conteoSpan.textContent) + 1;
-
-            boton.style.color = (voto === "true") ? "#2ecc71" : "#e74c3c";
-            boton.disabled = true;
-
-            Swal.fire({
-                icon: 'success',
-                title: '¡Voto registrado!',
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500,
-                toast: true
-            });
+        if (resultado.mensaje) {
+            if (resultado.mensaje === 'eliminado') {
+                delete almacenamiento[idProducto]; // Elimina el voto del almacenamiento
+                Swal.fire({
+                    icon: 'info',
+                    title: '¡Voto eliminado!',
+                    position: 'top-end',
+                    toast: true,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            } else {
+                almacenamiento[idProducto] = {
+                    // Guarda el ID del voto que regresa la API para después
+                    id: resultado.id || votoPrevio.id,
+                    voto: votoNuevo
+                };
+                Swal.fire({
+                    icon: 'success',
+                    title: `¡Voto ${resultado.mensaje}!`,
+                    position: 'top-end',
+                    toast: true,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+            localStorage.setItem('votos_pricesoff', JSON.stringify(almacenamiento));
+            // Para no recargar todo, refresca solo el conteo de votos
+            const inputBusqueda = document.querySelector('input[name="query"]');
+            if (inputBusqueda && inputBusqueda.value) {
+                buscarYMostrarResultados(document.querySelector('input[name="query"]').value);
+            }
         }
-    }
-    catch (error) {
+
+    } catch (error) {
         console.error("Error al registrar el voto:", error);
     }
 }
@@ -384,16 +414,12 @@ function iniciarAutocompletado() {
             input.parentElement.appendChild(contenedorSugerencias);
         }
 
-        input.addEventListener('input', async function () {
-            // Si el texto es muy corto, no hace la consulta
-            const busqueda = input.value.trim();
-
+        const realizarBusqueda = async (busqueda) => {
             if (busqueda.length < 2) {
                 contenedorSugerencias.innerHTML = '';
                 return;
             }
 
-            // Hace la consulta a la API de autocompletado
             try {
                 const url = `/api/autocompletar?nombre=${busqueda}`;
                 const respuesta = await fetch(url);
@@ -402,11 +428,26 @@ function iniciarAutocompletado() {
                 if (resultado.datos) {
                     mostrarSugerencias(resultado.datos, contenedorSugerencias, input);
                 }
-            }
-            catch (error) {
+            } catch (error) {
                 console.error("Error en autocompletado:", error);
             }
+        };
+
+        // Usa debounce y espera 400ms después de dejar de escribir
+        const busquedaDebounce = debounce((valor) => realizarBusqueda(valor), 400);
+
+        input.addEventListener('input', async function () {
+            const busqueda = input.value.trim();
+
+            // Si borra el texto, limpiamos las sugerencias y no hacemos consulta
+            if (busqueda.length === 0) {
+                contenedorSugerencias.innerHTML = '';
+                return;
+            }
+
+            busquedaDebounce(busqueda);
         });
+
         // Cerrar sugerencias al hacer clic fuera del input
         document.addEventListener('click', function (e) {
             if (e.target !== input) {
@@ -440,84 +481,56 @@ function mostrarSugerencias(sugerencias, contenedor, input) {
         contenedor.appendChild(li);
     });
 }
+
+async function obtenerDireccion(lat, lng) {
+    try {
+        const url = `/api/direccion?latitud=${lat}&longitud=${lng}`;
+        const respuesta = await fetch(url);
+        const datos = await respuesta.json();
+
+        if (datos.direccion && marker) {
+            // Mostramos la dirección en un pequeño globo de texto sobre el pin
+            marker.bindPopup(`<b>Ubicación seleccionada:</b><br>${datos.direccion}`, {
+                minwidth: 250,
+                maxwidth: 400,
+                className: 'popup_grande'
+            }).openPopup();
+        }
+    } catch (error) {
+        console.log("Error obteniendo la dirección:", error);
+    }
+}
+
 function iniciarMapas() {
     // 1. MAPA PARA LA VISTA DE "AGREGAR PRODUCTO" (agregar.php)
     if (document.querySelector('#mapa')) {
-        let lat = 20.655262; // Usando las coordenadas que ya tenías de prueba
-        let lng = -103.325492;
-        
-        const mapa = L.map('mapa').setView([lat, lng], 14);
+        mapa = L.map('mapa').setView([latitud, longitud], 14);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(mapa);
 
         // Pin que el usuario moverá
-        let marker = L.marker([lat, lng], {
-            draggable: true 
+        marker = L.marker([latitud, longitud], {
+            draggable: true
         }).addTo(mapa);
 
-        const obtenerDireccion = async (latitud, longitud) => {
-            try {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitud}&lon=${longitud}&zoom=18&addressdetails=1`;
-                const respuesta = await fetch(url);
-                const resultado = await respuesta.json();
-                
-                if(resultado && resultado.display_name) {
-                    // Mostramos la dirección en un pequeño globo de texto sobre el pin
-                    marker.bindPopup(`<b>Ubicación seleccionada:</b><br>${resultado.display_name}`, {
-                        minwidth: 250,
-                        maxwidth: 400,
-                        className: 'popup_grande'
-                    }).openPopup();
-                }
-            } catch (error) {
-                console.log("Error obteniendo la dirección:", error);
-            }
-        };
-
-        // Pedir permisos de ubicación actual
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (posicion) => {
-                    // Si el usuario acepta, actualizamos las coordenadas
-                    lat = posicion.coords.latitude;
-                    lng = posicion.coords.longitude;
-                    
-                    // Movemos el mapa y el pin a su ubicación real
-                    mapa.setView([lat, lng], 16);
-                    marker.setLatLng([lat, lng]);
-                    
-                    // Obtenemos el nombre de su calle
-                    obtenerDireccion(lat, lng);
-                },
-                (error) => {
-                    // Si rechaza el permiso o falla, usamos las de por defecto y sacamos su dirección
-                    console.log("Permiso de ubicación denegado, usando coordenadas por defecto.");
-                    obtenerDireccion(lat, lng);
-                }
-            );
-        } else {
-            // Si el navegador es muy viejo y no soporta geolocalización
-            obtenerDireccion(lat, lng);
-        }
+        obtenerDireccion(latitud, longitud); // Obtenemos la dirección inicial al cargar el mapa
 
         //Detectar cuando el usuario suelta el pin en otro lado -
-        marker.on('moveend', function() {
+        marker.on('moveend', function () {
             const posicion = marker.getLatLng();
             console.log("Nueva ubicación -> Lat: " + posicion.lat + ", Lng: " + posicion.lng);
-            
+            latitud = posicion.lat;
+            longitud = posicion.lng;
             // Llamamos a la API para traducir la nueva ubicación
-            obtenerDireccion(posicion.lat, posicion.lng);
+            obtenerDireccion(latitud, longitud);
         });
     }
 
     // 2. MAPA PARA LA VISTA DE "INICIO / RESULTADOS" (index.php)
     if (document.querySelector('#mapa_resultados')) {
-        const lat = 20.655262;
-        const lng = -103.325492;
-
-        const mapaBusqueda = L.map('mapa_resultados').setView([lat, lng], 13);
+        const mapaBusqueda = L.map('mapa_resultados').setView([latitud, longitud], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -530,29 +543,36 @@ function iniciarMapas() {
                 if (mutation.target.classList.contains('resultados_activos')) {
                     setTimeout(() => {
                         mapaBusqueda.invalidateSize();
+                        // Centra el mapa en el usuario al abrir resultados
+                        mapaBusqueda.setView([latitud, longitud], 13);
                     }, 100); // recalcule su tamaño
                 }
             });
         });
 
         const contenedorPrincipal = document.querySelector('#contenedor_principal');
-        if(contenedorPrincipal) {
+        if (contenedorPrincipal) {
             observer.observe(contenedorPrincipal, { attributes: true, attributeFilter: ['class'] });
         }
     }
 
     // 3. MAPA PARA EL FONDO DE LA PÁGINA DE INICIO 
     if (document.querySelector('#mapa_inicio')) {
-        const lat = 20.655262; 
-        const lng = -103.325492; 
-
         const mapaInicio = L.map('mapa_inicio', {
             zoomControl: false, // Quitamos los botones de + y - para que se vea más limpio
             scrollWheelZoom: false // Evitamos que el usuario haga zoom por accidente al scrollear
-        }).setView([lat, lng], 14);
+        }).setView([latitud, longitud], 14);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(mapaInicio);
     }
+}
+
+function debounce(fn, delay) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
 }
