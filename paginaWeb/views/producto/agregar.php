@@ -42,6 +42,7 @@
 
             <div class="campo_establecimiento">
                 <input type="text" placeholder="Nombre del establecimiento (opcional)" name="establecimiento">
+                <input type="hidden" id="direccion_input" name="direccion">
             </div>
         </div>
 
