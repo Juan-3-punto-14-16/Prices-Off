@@ -2,15 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     iniciarApp();
 })
 
-let productosActuales = [];
+let productosActuales = [], marcadoresGrupo = [];
 let busquedaActual = '';
-// CAMBIAR: latitud y longitud de prueba 20.655262648774382, -103.32549261971924
-let latitud = 20.655262;
-let longitud = -103.325492;
-let direccionActual = "Dirección no encontrada";
-let intervaloGPS;
-let mapa;
-let marker;
+let latitud = 20.655262, longitud = -103.325492;
+let mapa, marker, mapaBusqueda;
+let pinSeleccionadoActual = null, idProductoSeleccionado = null;
 
 function iniciarApp() {
     iniciarRastreoUbicacion();
@@ -27,7 +23,7 @@ function iniciarRastreoUbicacion() {
         // Ejecutamos una primera vez de inmediato
         actualizarCoordenadas();
         // Configura el intervalo para cada 5 minutos (300000 ms)
-        intervaloGPS = setInterval(() => {
+        setInterval(() => {
             actualizarCoordenadas();
         }, 300000);
     } else {
@@ -44,7 +40,7 @@ function actualizarCoordenadas() {
             console.log(`Ubicación actualizada: ${latitud}, ${longitud}`);
 
             // Si el mapa y el marcador ya están definidos, los actualizamos a la nueva ubicación
-            if (typeof mapa !== 'undefined' && marker) {
+            if (mapa !== undefined && marker) {
                 const nuevaPos = [latitud, longitud];
                 mapa.setView(nuevaPos, 16);
                 marker.setLatLng(nuevaPos);
@@ -71,7 +67,7 @@ function iniciarFormularioProductos() {
         btnAgregar.addEventListener('click', () => {
             // Tomamos la primera fila como "molde"
             const filaPlantilla = listaProductos.querySelector('.producto_fila');
-            // Clonamos ese molde (el 'true' indica que copie todo el HTML de adentro)
+            // Clonamos ese molde (el 'true' indica que copie el HTML de adentro)
             const nuevaFila = filaPlantilla.cloneNode(true);
             // Limpiamos los campos de texto y números de la nueva copia
             const inputs = nuevaFila.querySelectorAll('input');
@@ -165,7 +161,8 @@ async function enviarProductosFetch() {
             datos.append('productos', JSON.stringify(productos)); // Agrega el arreglo de productos como JSON
             datos.append('latitud', latitud);
             datos.append('longitud', longitud);
-            datos.append('direccion', direccionActual); // Agrega la dirección obtenida de la API
+            const direccion = document.querySelector('#direccion_input')?.value || "Dirección no encontrada";
+            datos.append('direccion', direccion); // Agrega la dirección obtenida
 
             const url = '/api/guardar';
             const respuesta = await fetch(url, {
@@ -221,6 +218,29 @@ function mostrarTarjetas(productos, latU, lonU) {
 
         const card = document.createElement('DIV');
         card.classList.add('card_producto');
+        card.dataset.id = producto.id;
+
+        // Si el producto está seleccionado es resaltado
+        if (producto.id === idProductoSeleccionado) {
+            card.classList.add('tarjeta_seleccionada');
+        }
+
+        // Evento de clic en tarjeta
+        card.addEventListener('click', (e) => {
+            // Si el clic fue en un botón de voto, no hace nada
+            if (e.target.closest('.btn_votar')) return;
+
+            // Buscael pin de la tarjeta a la que se hizo clic
+            const pinCorrespondiente = marcadoresGrupo.find(m => m.options.id === producto.id);
+
+            if (pinCorrespondiente) {
+                // Centra el mapa en el pin y abre su popup
+                mapaBusqueda.setView(pinCorrespondiente.getLatLng(), 15);
+                pinCorrespondiente.openPopup();
+                // La función openPopup disparará el evento para resaltar
+                seleccionarProducto(producto.id, pinCorrespondiente);
+            }
+        });
 
         card.innerHTML = `
             <div class="card_header">
@@ -365,7 +385,7 @@ async function registrarVotoFetch(idProducto, votoNuevo, boton) {
             }
             localStorage.setItem('votos_pricesoff', JSON.stringify(almacenamiento));
             // Refresca los resultados para mostrar el nuevo conteo de votos
-            if(busquedaActual){
+            if (busquedaActual) {
                 buscarYMostrarResultados(busquedaActual);
             }
         }
@@ -381,16 +401,25 @@ function ordenarResultados(metodo) {
     const copiaProductos = [...productosActuales]; // Creamos una copia para no modificar el arreglo original
 
     if (metodo === 'precio') {
-        copiaProductos.sort((a, b) => parseFloat(a.preciounitario) - parseFloat(b.preciounitario));
+        copiaProductos.sort((a, b) => Number.parseFloat(a.preciounitario) - Number.parseFloat(b.preciounitario));
     }
     else if (metodo === 'distancia') {
         copiaProductos.sort((a, b) => {
             const distanciaA = calcularDistancia(latitud, longitud, a.latitud, a.longitud);
             const distanciaB = calcularDistancia(latitud, longitud, b.latitud, b.longitud);
-            return parseFloat(distanciaA) - parseFloat(distanciaB);
+            return Number.parseFloat(distanciaA) - Number.parseFloat(distanciaB);
         });
     }
     mostrarTarjetas(copiaProductos, latitud, longitud);
+    pintarMarcadores(copiaProductos);
+
+    // Si hay un producto seleccionado se hace scroll hacia la tarjeta
+    if (idProductoSeleccionado) {
+        const tarjeta = document.querySelector(`.card_producto[data-id="${idProductoSeleccionado}"]`);
+        if (tarjeta) {
+            tarjeta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
 }
 
 function iniciarAutocompletado() {
@@ -481,7 +510,8 @@ async function obtenerDireccion(lat, lng) {
         const datos = await respuesta.json();
 
         if (datos.direccion && marker) {
-            direccionActual = datos.direccion;
+            const inputDireccion = document.querySelector('#direccion_input');
+            if (inputDireccion) inputDireccion.value = datos.direccion;
             // Mostramos la dirección en un pequeño globo de texto sobre el pin
             marker.bindPopup(`<b>Ubicación seleccionada:</b><br>${datos.direccion}`, {
                 minwidth: 250,
@@ -523,7 +553,7 @@ function iniciarMapas() {
 
     // 2. MAPA PARA LA VISTA DE "INICIO / RESULTADOS" (index.php)
     if (document.querySelector('#mapa_resultados')) {
-        const mapaBusqueda = L.map('mapa_resultados').setView([latitud, longitud], 13);
+        mapaBusqueda = L.map('mapa_resultados').setView([latitud, longitud], 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -562,10 +592,94 @@ function iniciarMapas() {
     }
 }
 
+function pintarMarcadores(productos) {
+    // Borrar los marcadores anteriores
+    marcadoresGrupo.forEach(m => mapaBusqueda.removeLayer(m));
+    marcadoresGrupo = [];
+    // Si no hay productos o mapa, no hace nada
+    if (!mapaBusqueda || productos.length === 0) return;
+
+    productos.forEach(producto => {
+        // Decide que ícono usar
+        const iconoAUsar = (producto.id === idProductoSeleccionado) ? obtenerIcono('seleccionado') : obtenerIcono('normal');
+        // Crea un marcador para cada producto y lo agrega al mapa
+        const pin = L.marker([producto.latitud, producto.longitud], { icon: iconoAUsar, id: producto.id }).addTo(mapaBusqueda);
+        // Si es el seleccionado, lo guardamos en la referencia de pin actual
+        if (producto.id === idProductoSeleccionado) {
+            pinSeleccionadoActual = pin;
+        }
+
+        pin.on('click', function () {
+            seleccionarProducto(producto.id, pin);
+        });
+        // Configura InfoWindow con la información del producto
+        const contenidoPopup = `
+            <div class="info_window">
+                <p style="margin:0 0 5px 0;">${producto.tienda}</p>
+                <p style="margin:0;"><b>$${producto.preciounitario} / ${producto.unidadmedida}</b></p>
+                <hr>
+                <p style="font-size: 11px; color: #666; margin:0;">${producto.direccion}</p>
+            </div>
+        `;
+        pin.bindPopup(contenidoPopup); // Asocia el popup al marcador
+
+        marcadoresGrupo.push(pin); // Guarda el marcador en el arreglo para poder eliminarlo después
+    });
+}
+
+function resaltarTarjeta(idProducto) {
+    // Borrar resaltados anteriores
+    const tarjetasAnteriores = document.querySelectorAll('.card_producto.tarjeta_seleccionada');
+    tarjetasAnteriores.forEach(tarjeta => {
+        tarjeta.classList.remove('tarjeta_seleccionada');
+    });
+
+    // Si el ID de la tarjeta coincide con el producto del marcador, le aplicamos un estilo diferente
+    const tarjeta = document.querySelector(`.card_producto[data-id="${idProducto}"]`);
+    if (tarjeta) {
+        tarjeta.classList.add('tarjeta_seleccionada');
+        tarjeta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function seleccionarProducto(id, pin) {
+    if (pinSeleccionadoActual) {
+        pinSeleccionadoActual.setIcon(obtenerIcono('normal')); // Regresa el pin anterior a su estado nromal
+    }
+    pin.setIcon(obtenerIcono('seleccionado')); // Cambia el pin del producto seleccionado al icono de selección
+    pinSeleccionadoActual = pin;
+    idProductoSeleccionado = id; // Guarda el ID del producto seleccionado
+    resaltarTarjeta(id); // Resalta la tarjeta del producto seleccionado
+}
+
 function debounce(fn, delay) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => fn.apply(this, args), delay);
     };
+}
+
+function obtenerIcono(tipo) {
+    const configBase = {
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    };
+
+    // Icono seleccionado (amarillo)
+    if (tipo === 'seleccionado') {
+        return L.icon({
+            ...configBase,
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png'
+        });
+    }
+
+    // Icono normal (rojo)
+    return L.icon({
+        ...configBase,
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png'
+    });
 }

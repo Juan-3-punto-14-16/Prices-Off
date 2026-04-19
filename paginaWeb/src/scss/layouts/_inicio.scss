@@ -195,6 +195,10 @@
             color: v.$cafe; 
         }
     }
+    &.tarjeta_seleccionada {
+        background-color: #eaeaea;
+        border-left: 5px solid v.$verde_oscuro;
+    }
 }
 
 .input_grupo {
