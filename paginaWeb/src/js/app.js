@@ -207,7 +207,7 @@ function mostrarTarjetas(productos, latU, lonU) {
             confirmButtonText: 'Volver a buscar',
         }).then(() => {
             // Redirigimos al index cuando el usuario presiona el botón
-            window.location.href = 'index.php';
+            globalThis.location.href = 'index.php';
         });
         return;
     }
@@ -726,7 +726,7 @@ function iniciarEscaneoTicket() {
 
             const resultado = await respuesta.json();
 
-            if (resultado.datos && resultado.datos.productos && resultado.datos.productos.length > 0) {
+            if (resultado.datos?.productos?.length > 0) {
                 const filaPlantilla = listaProductos.querySelector('.producto_fila').cloneNode(true);
                 // Limpiamos la lista actual antes de meter los del ticket
                 listaProductos.innerHTML = '';
@@ -747,6 +747,7 @@ function iniciarEscaneoTicket() {
                 })
             }
         } catch (error) {
+            console.error("Error detallado del escaneo:", error);
             Swal.fire({
                 title: "Error",
                 text: "No se pudo procesar el ticket",
