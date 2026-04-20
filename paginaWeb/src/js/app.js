@@ -16,6 +16,7 @@ function iniciarApp() {
     iniciarMecanismoVotos();
     iniciarAutocompletado();
     iniciarMapas();
+    iniciarEscaneoTicket();
 }
 
 function iniciarRastreoUbicacion() {
@@ -199,7 +200,15 @@ function mostrarTarjetas(productos, latU, lonU) {
     contenedor.innerHTML = ''; // Limpiamos el contenedor antes de mostrar nuevos resultados
 
     if (productos.length === 0) {
-        contenedor.innerHTML = '<p class="alerta info">No se encontraron productos que coincidan con la búsqueda.</p>';
+        Swal.fire({
+            icon: 'info',
+            title: 'Sin resultados',
+            text: 'No encontramos productos con ese nombre. Intenta con otra búsqueda.',
+            confirmButtonText: 'Volver a buscar',
+        }).then(() => {
+            // Redirigimos al index cuando el usuario presiona el botón
+            globalThis.location.href = 'index.php';
+        });
         return;
     }
 
@@ -286,13 +295,13 @@ async function buscarYMostrarResultados(textoBuscado) {
         const respuesta = await fetch(url);
         const resultado = await respuesta.json();
 
-        if (!resultado.datos) return;
         // Guarda los productos actuales para ordenarlos despues sin tener que hacer otra consulta
-        productosActuales = resultado.datos;
+        productosActuales = resultado.datos || [];
         const metodoActual = document.querySelector('#orden').value; // Método de ordenamiento actual
         ordenarResultados(metodoActual);
     }
     catch (error) {
+        productosActuales = [];
         console.error("Error al obtener los productos:", error);
     }
 }
@@ -396,19 +405,19 @@ async function registrarVotoFetch(idProducto, votoNuevo, boton) {
 }
 
 function ordenarResultados(metodo) {
-    if (productosActuales.length === 0) return; // Si no hay productos, no hacemos nada
-
     const copiaProductos = [...productosActuales]; // Creamos una copia para no modificar el arreglo original
 
-    if (metodo === 'precio') {
-        copiaProductos.sort((a, b) => Number.parseFloat(a.preciounitario) - Number.parseFloat(b.preciounitario));
-    }
-    else if (metodo === 'distancia') {
-        copiaProductos.sort((a, b) => {
-            const distanciaA = calcularDistancia(latitud, longitud, a.latitud, a.longitud);
-            const distanciaB = calcularDistancia(latitud, longitud, b.latitud, b.longitud);
-            return Number.parseFloat(distanciaA) - Number.parseFloat(distanciaB);
-        });
+    if (copiaProductos.length > 0) {
+        if (metodo === 'precio') {
+            copiaProductos.sort((a, b) => Number.parseFloat(a.preciounitario) - Number.parseFloat(b.preciounitario));
+        }
+        else if (metodo === 'distancia') {
+            copiaProductos.sort((a, b) => {
+                const distanciaA = calcularDistancia(latitud, longitud, a.latitud, a.longitud);
+                const distanciaB = calcularDistancia(latitud, longitud, b.latitud, b.longitud);
+                return Number.parseFloat(distanciaA) - Number.parseFloat(distanciaB);
+            });
+        }
     }
     mostrarTarjetas(copiaProductos, latitud, longitud);
     pintarMarcadores(copiaProductos);
@@ -660,26 +669,110 @@ function debounce(fn, delay) {
     };
 }
 
+const iconosCache = {};
 function obtenerIcono(tipo) {
-    const configBase = {
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    if (iconosCache[tipo]) return iconosCache[tipo];
+
+    // Colores según el tipo
+    const colores = {
+        'seleccionado': 'yellow',
+        'normal': 'red'
+    };
+
+    iconosCache[tipo] = L.icon({
+        iconUrl: `/build/img/marker-icon-${colores[tipo] || 'red'}.png`,
+        shadowUrl: '/build/img/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
         shadowSize: [41, 41]
-    };
-
-    // Icono seleccionado (amarillo)
-    if (tipo === 'seleccionado') {
-        return L.icon({
-            ...configBase,
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-yellow.png'
-        });
-    }
-
-    // Icono normal (rojo)
-    return L.icon({
-        ...configBase,
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png'
     });
+
+    return iconosCache[tipo];
+}
+
+function iniciarEscaneoTicket() {
+    const btnEscanear = document.querySelector('#btn_escanear');
+    const inputTicket = document.querySelector('#input_ticket');
+    const listaProductos = document.querySelector('#lista_productos');
+
+    if (!btnEscanear || !inputTicket || !listaProductos) return;
+
+    // Esto abre la ventana para elegir la foto
+    btnEscanear.addEventListener('click', () => { inputTicket.click(); });
+
+    inputTicket.addEventListener('change', async () => {
+        const foto = inputTicket.files[0];
+        if (!foto) return;
+
+        Swal.fire({
+            title: 'Procesando ticket...',
+            text: 'Se están analizando los productos con IA',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const datos = new FormData();
+        datos.append('ticket', foto);
+
+        try {
+            const respuesta = await fetch('/api/escanear', {
+                method: 'POST',
+                body: datos
+            });
+
+            // Verifica si la respuesta es correcta antes de intentar leer el JSON
+            if (!respuesta.ok) throw new Error('Error en el servidor');
+
+            const resultado = await respuesta.json();
+
+            if (resultado.datos?.productos?.length > 0) {
+                const filaPlantilla = listaProductos.querySelector('.producto_fila').cloneNode(true);
+                // Limpiamos la lista actual antes de meter los del ticket
+                listaProductos.innerHTML = '';
+
+                resultado.datos.productos.forEach(producto => {
+                    agregarFilaConDatos(producto, filaPlantilla, listaProductos);
+                });
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: `Se han detectado ${resultado.datos.productos.length} productos`,
+                    icon: 'success'
+                });
+            } else {
+                Swal.fire({
+                    title: "Sin resultados",
+                    text: "No se detectaron productos en el ticket, vuelve a intentarlo.",
+                    icon: "warning"
+                })
+            }
+        } catch (error) {
+            console.error("Error detallado del escaneo:", error);
+            Swal.fire({
+                title: "Error",
+                text: "No se pudo procesar el ticket",
+                icon: "error"
+            });
+        } finally {
+            // Limpia el input para poder subir el mismo archivo si falla
+            inputTicket.value = "";
+        }
+    });
+}
+
+function agregarFilaConDatos(producto, filaPlantilla, listaProductos) {
+    // Clona la fila plantilla para cada producto detectado
+    const nuevaFila = filaPlantilla.cloneNode(true);
+
+    const inputNombre = nuevaFila.querySelector('[name="nombre[]"]');
+    const inputPrecio = nuevaFila.querySelector('[name="precio[]"]');
+    const inputCantidad = nuevaFila.querySelector('[name="cantidad[]"]');
+    const selectUnidad = nuevaFila.querySelector('[name="unidad[]"]');
+
+    if (inputNombre) inputNombre.value = producto.nombre || '';
+    if (inputPrecio) inputPrecio.value = producto.precio || '';
+    if (inputCantidad) inputCantidad.value = producto.cantidad || 1;
+    if (selectUnidad) selectUnidad.value = producto.unidadmedida || '';
+
+    listaProductos.appendChild(nuevaFila);
 }
