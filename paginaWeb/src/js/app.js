@@ -206,7 +206,7 @@ function mostrarTarjetas(productos, latU, lonU) {
             text: 'No encontramos productos con ese nombre. Intenta con otra búsqueda.',
             confirmButtonText: 'Volver a buscar',
         }).then(() => {
-            // 2. Redirigimos al index cuando el usuario presiona el botón
+            // Redirigimos al index cuando el usuario presiona el botón
             window.location.href = 'index.php';
         });
         return;
