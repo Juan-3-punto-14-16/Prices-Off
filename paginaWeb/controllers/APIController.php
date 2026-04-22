@@ -242,7 +242,7 @@ class APIController {
             'nombre' => '',
             'precio' => 0,
             'cantidad' => 1,
-            'unidadmedida' => ''
+            'unidadmedida' => 'pieza'
         ];
 
         // Los 'line_item' son como cajas pequeñas que tienen más datos adentro.
@@ -265,7 +265,14 @@ class APIController {
                     break;
                     
                 case 'line_item/unit':
-                    $producto['unidadmedida'] = trim($textoDetectado);
+                    $unidad = strtolower(trim($textoDetectado));
+                    $unidades = [
+                        'pza' => 'pieza', 'pzas' => 'pieza', 'pz' => 'pieza', 'piezas' => 'pieza', 'pieza' => 'pieza',
+                        'l' => 'litro', 'lt' => 'litro', 'lts' => 'litro', 'litros' => 'litro', 'litro' => 'litro',
+                        'kilogramo' => 'kg', 'kilogramos' => 'kg', 'kilo' => 'kg', 'kilos' => 'kg', 'kg' => 'kg'
+                    ];
+
+                    $producto['unidadmedida'] = $unidades[$unidad] ?? 'pieza';
                     break;
 
                 default:
