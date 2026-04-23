@@ -27,15 +27,19 @@ jobs:
 
       # 3. Instalamos las dependencias de Composer (incluyendo Pest)
       - name: Instalar Composer
+        working-directory: paginaWeb
         run: composer install --prefer-dist --no-progress
 
       # 4. ¡LA MAGIA! Corremos las pruebas y generamos el archivo temporal clover.xml
       - name: Ejecutar Pest PHP y generar Cobertura
+        working-directory: paginaWeb
         run: vendor/bin/pest --coverage --coverage-clover=clover.xml
 
       # 5. SonarQube lee el clover.xml y manda los resultados a la nube
       - name: Escaneo de SonarQube
         uses: SonarSource/sonarcloud-github-action@master
+        with: 
+          projectBaseDir: paginaWeb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

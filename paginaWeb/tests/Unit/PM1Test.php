@@ -10,12 +10,12 @@ it('rechaza precios menores a cero según el requerimiento PM_1', function () {
     $producto->precio = -50.00;
 
     // Llenamos lo demás válido para aislar el error
-    $producto->cantidad = 1; 
+    $producto->cantidad = 1;
     $producto->unidadmedida = 'pieza';
     
     // Esperamos que el arreglo devuelto tenga la llave 'error'
     $alertas = $producto->validar();
-    expect($alertas)->toHaveKey('error'); 
+    expect($alertas)->toHaveKey('error');
 
     // Paso 3: Enviar al componente un precio de 0.
     $producto->precio = 0;
