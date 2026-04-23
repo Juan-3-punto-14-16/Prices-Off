@@ -2,11 +2,13 @@
 @use 'base/mixins' as m;
 
 .contenedor_agregar {
-    padding: 3rem;
+    padding: 1.5rem; 
     background-color: v.$crema;
 
-    @include m.grid(1, 3rem);
-    @include m.tablet {
+    @include m.grid(1, 2rem);
+    
+    @include m.desktop {
+        padding: 3rem;
         @include m.grid(2, 3rem);
     }
 }
@@ -19,8 +21,13 @@
     margin: 0 auto;
     border-radius: 0.5rem;
     font-size: 1.4rem; 
-    padding: 1.5rem 4rem; 
+    padding: 1.5rem 2rem;
     border: none;
+    width: 100%;
+    @include m.tablet {
+        width: auto;
+        padding: 1.5rem 4rem; 
+    }
 
     &:hover {
         transform: scale(1.05);
@@ -28,17 +35,27 @@
 }
 .alinear_derecha {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center; 
     width: 100%;
-}
 
+    @include m.tablet {
+        justify-content: flex-end; 
+    }
+}
 .btn_enviar {
     @include m.boton(v.$amarillo, v.$negro);
     margin: 0; 
     border-radius: 2rem; 
-    font-size: 1.2rem;
-    padding: 1rem 3.5rem;
+    font-size: 1.4rem;
+    padding: 1.5rem 3.5rem;
     border: none;
+    width: 100%;
+
+    @include m.tablet {
+        width: auto;
+        font-size: 1.2rem;
+        padding: 1rem 3.5rem;
+    }
 
     &:hover {
         transform: scale(1.05);
@@ -47,20 +64,33 @@
 .instruccion_manual{
     font-weight: bold;
     margin-top: 1.5rem;
-    font-size: 1.7rem;
+    font-size: 1.4rem; 
+
+    @include m.tablet {
+        font-size: 1.7rem;
+    }
 }
+
 .caja_formulario {
     border: 3px solid v.$negro;
-    padding: 2rem;
+    padding: 1.5rem;
     background-color: v.$blanco;
     margin-bottom: 2rem;
+
+    @include m.tablet {
+        padding: 2rem;
+    }
 }
 .producto_encabezados {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.5fr 40px;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    align-items: center;
+    display: none; 
+
+    @include m.tablet {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.5fr 40px;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+    }
 
     .etiqueta_pill{
         color: v.$negro;
@@ -79,43 +109,96 @@
 }
 .lista_productos {
     margin-bottom: 1rem;
-    max-height: 180px; /* Puedes subir o bajar este número dependiendo de qué tan grande quieras la caja */
-    overflow-y: auto;  /* Crea el scroll vertical automáticamente solo cuando es necesario */
-    overflow-x: hidden; /* Evita que salga un scroll horizontal feo por accidente */
-    padding-right: 0.5rem; /* Da un pequeñito espacio para que la barra no se encime en tus inputs */
+    max-height: auto; 
+    overflow-y: visible; 
+
+    @include m.tablet {
+        max-height: 180px; 
+        overflow-y: auto;  
+        overflow-x: hidden; 
+        padding-right: 0.5rem; 
+    }
 }
-.producto_fila{
+.producto_fila {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.5fr 40px;
+    grid-template-columns: 1fr 1fr 80px; 
+    grid-template-rows: auto auto;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #ddd;
     align-items: center;
 
+    input:nth-child(1) { 
+        grid-column: 1 / span 2; 
+        grid-row: 1;
+    }
+    
+    .btn_eliminar { 
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: center; 
+    }
+
+    input:nth-child(2) { 
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    input:nth-child(3) { 
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    select:nth-child(4) { 
+        grid-column: 3;
+        grid-row: 2;
+        padding: 0.8rem 0.5rem; 
+    }
+
+    @include m.tablet {
+        grid-template-columns: 2fr 1fr 1fr 1.5fr 40px;
+        grid-template-rows: auto;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0;
+        border-bottom: none;
+
+        input:nth-child(1),
+        input:nth-child(2),
+        input:nth-child(3),
+        select:nth-child(4),
+        .btn_eliminar {
+            grid-column: auto;
+            grid-row: auto;
+        }
+    }
+
     input, select {
-        -webkit-appearance: none; /* Quita el diseño por defecto de Chrome/Safari */
-        -moz-appearance: none;    /* Quita el diseño por defecto de Firefox */
+        -webkit-appearance: none; 
+        -moz-appearance: none;    
         appearance: none;
         
+        font-size: 1.4rem;
         padding: 0.8rem;
         border: 2px solid #ccc;
-        border-radius: 2rem;
+        border-radius: 0.5rem; 
         text-align: center;
         font-weight: bold;
         width: 100%;
         outline: none;
-        
     }
 
     &:focus-within {
         border-color: v.$negro;
     }
     select:invalid {
-        color: #7e7d7d; /* El gris clásico de los placeholders */
+        color: #7e7d7d; 
     }
     select option {
         color: v.$negro; 
     }
 }
+
 .btn_eliminar {
     background-color: transparent;
     border: 2px solid red;
@@ -129,6 +212,13 @@
     padding: 0;
     color: red;
     transition: all 0.5s ease;
+    grid-column: 3;
+    grid-row: 1;
+
+    @include m.tablet {
+        grid-column: auto;
+        grid-row: auto;
+    }
 
     svg{
         width: 20px;
@@ -148,11 +238,13 @@
     cursor: pointer;
     font-weight: bold;
     margin-bottom: 2rem;
+    font-size: 1.4rem;
 
     &:hover {
         color: v.$negro;
     }
 }
+
 .campo_establecimiento {
    margin-bottom: 2rem;
 
@@ -164,39 +256,51 @@
     outline: none;
    }
 }
+
 .contenedor_mapa{
     display: flex;
     flex-direction: column;
 }
+
 .mapa_placeholder {
     width: 100%;
     position: relative;
 }
+
 .mapa_etiqueta {
     position: absolute;
     top: 2rem;
     left: 50%;
     transform: translateX(-50%); 
-    z-index: 2000;
+    z-index: 500;
     
-    width: 80%;
+    width: 90%; 
     max-width: 1000px;
     border: 2px solid v.$negro;
-    padding: 1.2rem;
+    padding: 1rem;
     text-align: center;
     font-weight: bold;
-    font-size: 1.5rem;
+    font-size: 1.3rem; 
     background-color: v.$blanco;
     color: v.$negro;
-}
 
+    @include m.tablet {
+        width: 80%;
+        padding: 1.2rem;
+        font-size: 1.5rem;
+    }
+}
 .mapa_visual{
     height: 100%;
-    min-height: 550px; 
+    min-height: 400px;
     width: 100%;
     border: 2px solid v.$negro;
     background-color: v.$gris;
     z-index: 1;
+
+    @include m.tablet {
+        min-height: 550px; 
+    }
 }
 .popup_grande {
     .leaflet-popup-content {
