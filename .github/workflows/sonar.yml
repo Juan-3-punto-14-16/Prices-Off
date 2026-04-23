@@ -37,7 +37,7 @@ jobs:
 
       # 5. SonarQube lee el clover.xml y manda los resultados a la nube
       - name: Escaneo de SonarQube
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         with: 
           projectBaseDir: paginaWeb
         env:
