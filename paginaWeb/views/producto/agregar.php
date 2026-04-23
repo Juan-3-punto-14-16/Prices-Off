@@ -19,9 +19,9 @@
 
             <div class="lista_productos" id="lista_productos">
                 <div class="producto_fila">
-                    <input type="text" placeholder="Ej. Jitomate" name="nombre[]" required>
-                    <input type="number" placeholder="30" name="precio[]" step="0.01" required>
-                    <input type="number" placeholder="2" name="cantidad[]" step="0.1" required>
+                    <input type="text" placeholder="Nombre del producto" name="nombre[]" required>
+                    <input type="number" placeholder="Precio" name="precio[]" step="any" required>
+                    <input type="number" placeholder="Cantidad" name="cantidad[]" step="any" required>
 
                     <select name="unidad[]" required>
                         <option value="" disabled selected hidden>Unidad</option>

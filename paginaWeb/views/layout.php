@@ -36,7 +36,6 @@
     <footer class="footer">
         <p>Todos los derechos reservados SA de CV.</p> 
     </footer>
-
     <?php echo $script ?? ''; ?>
     
 </body>
