@@ -1,0 +1,41 @@
+name: Pruebas y SonarQube
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  analisis:
+    name: Ejecutar Pest y SonarQube
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. El servidor descarga tu código
+      - name: Descargar código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necesario para que SonarQube entienda el historial
+
+      # 2. El servidor instala PHP con los "lentes" de PCOV
+      - name: Instalar PHP y PCOV
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3" # Asumiendo que usas PHP 8
+          coverage: pcov
+
+      # 3. Instalamos las dependencias de Composer (incluyendo Pest)
+      - name: Instalar Composer
+        run: composer install --prefer-dist --no-progress
+
+      # 4. ¡LA MAGIA! Corremos las pruebas y generamos el archivo temporal clover.xml
+      - name: Ejecutar Pest PHP y generar Cobertura
+        run: vendor/bin/pest --coverage --coverage-clover=clover.xml
+
+      # 5. SonarQube lee el clover.xml y manda los resultados a la nube
+      - name: Escaneo de SonarQube
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

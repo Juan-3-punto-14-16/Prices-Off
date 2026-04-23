@@ -53,7 +53,7 @@ class APIController {
         }
 
         // Límite de peso (5 Megabytes)
-        $pesoMaximo = 5 * 1024 * 1024; 
+        $pesoMaximo = 5 * 1024 * 1024;
         if ($_FILES['ticket']['size'] > $pesoMaximo) {
             echo json_encode(['error' => 'El archivo es demasiado pesado. Máximo 5MB.']);
             return;
@@ -70,7 +70,7 @@ class APIController {
             return;
         }
 
-        // Todo seguro, convertimos la imagen a bytes
+        // Es seguro, convertimos la imagen a bytes
         $contenidoImagen = file_get_contents($archivoTemporal);
 
         try {
