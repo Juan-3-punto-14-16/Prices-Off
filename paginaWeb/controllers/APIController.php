@@ -26,7 +26,7 @@ class APIController {
     }
 
     public static function buscar() {
-        $nombre = trim($_GET['nombre'] ?? '');
+        $nombre = s(trim($_GET['nombre'] ?? ''));
 
         if(empty($nombre)) {
             echo json_encode(['error' => ['El campo de búsqueda no puede estar vacío']]);
@@ -52,12 +52,26 @@ class APIController {
             return;
         }
 
-        // Extraemos el archivo de la memoria temporal de la computadora
-        $archivoTemporal = $_FILES['ticket']['tmp_name'];
+        // Límite de peso (5 Megabytes)
+        $pesoMaximo = 5 * 1024 * 1024; 
+        if ($_FILES['ticket']['size'] > $pesoMaximo) {
+            echo json_encode(['error' => 'El archivo es demasiado pesado. Máximo 5MB.']);
+            return;
+        }
 
-        // Convertimos la imagen a código puro (bytes) y detectamos su formato
-        $contenidoImagen = file_get_contents($archivoTemporal);
+        // Extraemos el archivo de la memoria temporal
+        $archivoTemporal = $_FILES['ticket']['tmp_name'];
         $mimeType = mime_content_type($archivoTemporal);
+
+        // Tipos de archivo permitidos (MIME Types reales, no solo la extensión)
+        $tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!in_array($mimeType, $tiposPermitidos)) {
+            echo json_encode(['error' => 'Formato no permitido. Solo sube imágenes JPG, PNG o WEBP.']);
+            return;
+        }
+
+        // Todo seguro, convertimos la imagen a bytes
+        $contenidoImagen = file_get_contents($archivoTemporal);
 
         try {
             // Cargamos la configuración desde el archivo .env
@@ -125,7 +139,7 @@ class APIController {
         $lat = filter_var($_GET['latitud'] ?? '', FILTER_VALIDATE_FLOAT);
         $lng = filter_var($_GET['longitud'] ?? '', FILTER_VALIDATE_FLOAT);
 
-        if($lat === false || $lng === false) {
+        if($lat === false || $lng === false || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
             echo json_encode(['error' => 'Coordenadas inválidas']);
             return;
         }

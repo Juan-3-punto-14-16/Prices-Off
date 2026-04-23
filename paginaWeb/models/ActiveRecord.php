@@ -114,8 +114,8 @@ class ActiveRecord {
     }
 
     // Consulta Plana de SQL (Utilizar cuando los métodos del modelo no son suficientes)
-    public static function sql($query) {
-        return self::obtenerObjetos($query);
+    public static function sql($query, $params = []) {
+        return self::obtenerObjetos($query, $params);
     }
 
     // Obtener Registros Parecidos A

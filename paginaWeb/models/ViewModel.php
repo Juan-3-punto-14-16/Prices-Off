@@ -55,11 +55,11 @@ class ViewModel extends ActiveRecord {
                 JOIN catalogo c ON rp.idcatalogo = c.id
                 JOIN ubicacion u ON rp.idubicacion = u.id
                 LEFT JOIN votos v ON rp.id = v.idregistroproducto
-            WHERE c.nombre = '$nombre'
+            WHERE c.nombre = ?
             GROUP BY rp.id, c.nombre, u.tienda, u.direccion, u.latitud, u.longitud
             ORDER BY preciounitario
         ";
 
-        return self::sql($query);
+        return self::sql($query, [$nombre]);
     }
 }
