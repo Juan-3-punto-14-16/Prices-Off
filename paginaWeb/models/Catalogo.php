@@ -10,7 +10,7 @@ class Catalogo extends ActiveRecord {
 
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
-        $this->nombre = trim($args['nombre'] ?? '');
+        $this->nombre = s(trim($args['nombre'] ?? ''));
 
         $this->normalizarNombre();
     }

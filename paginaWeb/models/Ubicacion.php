@@ -15,18 +15,18 @@ class Ubicacion extends ActiveRecord {
         $this->id = $args['id'] ?? null;
         $this->latitud = trim($args['latitud'] ?? '');
         $this->longitud = trim($args['longitud'] ?? '');
-        $this->tienda = trim($args['tienda'] ?? '') ?: 'Sin Nombre';
-        $this->direccion = trim($args['direccion'] ?? '');
+        $this->tienda = s(trim($args['tienda'] ?? '') ?: 'Sin Nombre');
+        $this->direccion = s(trim($args['direccion'] ?? ''));
     }
 
     public function validar() {
         self::$alertas = [];
 
-        if($this->latitud === '' || filter_var($this->latitud, FILTER_VALIDATE_FLOAT) === false) {
+        if($this->latitud === '' || filter_var($this->latitud, FILTER_VALIDATE_FLOAT) === false || $this->latitud < -90 || $this->latitud > 90) {
             self::$alertas['error'][] = 'Latitud inválida';
         }
 
-        if($this->longitud === '' || filter_var($this->longitud, FILTER_VALIDATE_FLOAT) === false) {
+        if($this->longitud === '' || filter_var($this->longitud, FILTER_VALIDATE_FLOAT) === false || $this->longitud < -180 || $this->longitud > 180) {
             self::$alertas['error'][] = 'Longitud inválida';
         }
 
