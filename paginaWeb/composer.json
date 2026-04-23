@@ -10,9 +10,22 @@
             "Classes\\" : "./classes"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "./tests"
+        }
+    },
     "require": {
         "phpmailer/phpmailer": "^6.5",
         "vlucas/phpdotenv": "^5.6",
         "google/cloud-document-ai": "^2.6"
+    },
+    "require-dev": {
+        "pestphp/pest": "^4.6"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     }
 }
