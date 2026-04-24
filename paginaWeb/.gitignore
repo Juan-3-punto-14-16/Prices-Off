@@ -25,3 +25,10 @@ DB_pricesOff.sql
 
 # Ultima limpieza de la BD
 jobs/memoria_limpieza.txt
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

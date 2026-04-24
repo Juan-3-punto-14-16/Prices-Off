@@ -11,20 +11,15 @@
         <testsuite name="Integracion">
             <directory>tests/Integration</directory>
         </testsuite>
-        <testsuite name="Sistema">
-            <directory>tests/E2E</directory>
-        </testsuite>
     </testsuites>
     <source>
         <include>
             <directory suffix=".php">controllers</directory>
-            <directory suffix=".php">includes</directory>
             <directory suffix=".php">jobs</directory>
             <directory suffix=".php">models</directory>
-            <directory suffix=".php">public</directory>
-            <directory suffix=".php">views</directory>
 
             <file>Router.php</file>
+            <file>includes/funciones.php</file>
         </include>
     </source>
 </phpunit>
