@@ -18,12 +18,12 @@ jobs:
         with:
           fetch-depth: 0 # Necesario para que SonarQube entienda el historial
 
-      # 2. El servidor instala PHP con los "lentes" de PCOV
-      - name: Instalar PHP y PCOV
+      # 2. El servidor instala PHP con los "lentes" de XDEBUG
+      - name: Instalar PHP y Xdebug
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3" # Asumiendo que usas PHP 8
-          coverage: pcov
+          php-version: "8.3" 
+          coverage: xdebug
 
       # 3. Instalamos las dependencias de Composer (incluyendo Pest)
       - name: Instalar Composer
