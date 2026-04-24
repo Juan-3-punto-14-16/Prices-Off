@@ -17,12 +17,12 @@
     </testsuites>
     <source>
         <include>
-            <directory>controllers</directory>
-            <directory>includes</directory>
-            <directory>jobs</directory>
-            <directory>models</directory>
-            <directory>public</directory>
-            <directory>views</directory>
+            <directory suffix=".php">controllers</directory>
+            <directory suffix=".php">includes</directory>
+            <directory suffix=".php">jobs</directory>
+            <directory suffix=".php">models</directory>
+            <directory suffix=".php">public</directory>
+            <directory suffix=".php">views</directory>
 
             <file>Router.php</file>
         </include>
