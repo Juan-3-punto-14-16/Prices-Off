@@ -20,9 +20,6 @@ npm-debug.log*
 # Credenciales Google Cloud
 google-credenciales.json
 
-# Base de Datos
-DB_pricesOff.sql
-
 # Ultima limpieza de la BD
 jobs/memoria_limpieza.txt
 
