@@ -47,10 +47,6 @@ function actualizarCoordenadas() {
                 marker.setLatLng(nuevaPos);
                 // Actualiza la dirección de Google Maps para esa nueva posición
                 obtenerDireccion(latitud, longitud);
-                // Si el mapa de resultados está activo, también lo actualizamos para que el usuario vea su nueva ubicación
-                if (mapa) {
-                    mapa.panTo([latitud, longitud]);
-                }
             }
         },
         (error) => {
@@ -547,8 +543,6 @@ function iniciarMapas() {
             draggable: true
         }).addTo(mapa);
 
-        obtenerDireccion(latitud, longitud); // Obtenemos la dirección inicial al cargar el mapa
-
         //Detectar cuando el usuario suelta el pin en otro lado -
         marker.on('moveend', function () {
             const posicion = marker.getLatLng();
@@ -659,6 +653,7 @@ function seleccionarProducto(id, pin) {
     pinSeleccionadoActual = pin;
     idProductoSeleccionado = id; // Guarda el ID del producto seleccionado
     resaltarTarjeta(id); // Resalta la tarjeta del producto seleccionado
+    mapaBusqueda.setView(pin.getLatLng(), 15); // Centra el pin en el mapa
 }
 
 function debounce(fn, delay) {
@@ -681,11 +676,9 @@ function obtenerIcono(tipo) {
 
     iconosCache[tipo] = L.icon({
         iconUrl: `/build/img/marker-icon-${colores[tipo] || 'red'}.png`,
-        shadowUrl: '/build/img/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
-        shadowSize: [41, 41]
     });
 
     return iconosCache[tipo];
