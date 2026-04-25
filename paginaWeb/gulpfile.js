@@ -79,3 +79,6 @@ export function dev() {
 }
 
 export default series( js, css, imagenes, dev )
+
+// LÍNEA PARA EL ROBOT DE GITHUB (compila y se apaga)
+export const build = series( js, css, imagenes )
