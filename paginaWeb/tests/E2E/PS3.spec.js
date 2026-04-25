@@ -8,7 +8,7 @@ test.describe('PS_3: Sistema de Reputación (Likes/Dislikes)', () => {
 
         const buscador = page.getByPlaceholder('Jitomate, cebolla...');
         await buscador.fill('Jitomate'); 
-        await page.getByRole('button', { name: 'BUSCAR' }).click();
+        await page.getByRole('button', { name: 'BUSCAR' }).first().click();
 
         // Esperamos a que los resultados carguen (el robot esperará al primer botón de votar)
         const botonLike = page.locator('button.btn_votar[data-voto="true"]').first();
@@ -29,7 +29,7 @@ test.describe('PS_3: Sistema de Reputación (Likes/Dislikes)', () => {
         await page.reload();
         if (page.url() === 'http://localhost:3000/') {
             await buscador.fill('Jitomate');
-            await page.getByRole('button', { name: 'BUSCAR' }).click();
+            await page.getByRole('button', { name: 'BUSCAR' }).first().click();
         }
 
         await expect(page.locator('button.btn_votar[data-voto="true"]').first().locator('.conteo_votos'))
