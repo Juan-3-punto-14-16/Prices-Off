@@ -1,0 +1,80 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: robot
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: test_pricesoff
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: paginaWeb
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configurar PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+
+    - name: Instalar dependencias de Composer
+      run: composer install --no-interaction --prefer-dist
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Preparar Base de Datos de Pruebas
+      run: PGPASSWORD=password123 psql -h localhost -U robot -d test_pricesoff -f tests/db_test_seed.sql
+
+    - name: Crear archivo JSON de Google
+      env:
+        GCP_CREDS: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      run: echo "$GCP_CREDS" > google-credenciales.json
+
+    - name: Crear archivo .env temporal
+      run: |
+        echo "DB_HOST=localhost" >> .env
+        echo "DB_PORT=5432" >> .env
+        echo "DB_NAME=test_pricesoff" >> .env
+        echo "DB_USER=robot" >> .env
+        echo "DB_PASS=password123" >> .env
+        echo "GOOGLE_GEOCODING_API_KEY=${{ secrets.GOOGLE_GEOCODING_API_KEY }}" >> .env
+        echo "DOCUMENT_AI_PROCESSOR_ID=${{ secrets.DOCUMENT_AI_PROCESSOR_ID }}" >> .env
+        echo "GOOGLE_CLOUD_PROJECT_ID=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}" >> .env
+        echo "GOOGLE_CLOUD_LOCATION=${{ secrets.GOOGLE_CLOUD_LOCATION }}" >> .env
+        echo "GOOGLE_APPLICATION_CREDENTIALS=google-credenciales.json" >> .env
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
+    - name: Correr pruebas E2E
+      run: npx playwright test
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report
+        path: paginaWeb/playwright-report/
+        retention-days: 30
