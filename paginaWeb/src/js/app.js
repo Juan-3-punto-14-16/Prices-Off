@@ -619,7 +619,7 @@ function pintarMarcadores(productos) {
         const contenidoPopup = `
             <div class="info_window">
                 <p style="margin:0 0 5px 0;">${producto.tienda}</p>
-                <p style="margin:0;"><b>$${producto.preciounitario} / ${producto.unidadmedida}</b></p>
+                <p style="margin:0; color: #ff9f0f;"><b>$${producto.preciounitario} / ${producto.unidadmedida}</b></p>
                 <hr>
                 <p style="font-size: 11px; color: #666; margin:0;">${producto.direccion}</p>
             </div>
@@ -675,10 +675,12 @@ function obtenerIcono(tipo) {
     };
 
     iconosCache[tipo] = L.icon({
-        iconUrl: `/build/img/marker-icon-${colores[tipo] || 'red'}.png`,
+        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${colores[tipo]}.png`,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        shadowSize: [41, 41]
     });
 
     return iconosCache[tipo];
