@@ -618,10 +618,10 @@ function pintarMarcadores(productos) {
         // Configura InfoWindow con la información del producto
         const contenidoPopup = `
             <div class="info_window">
-                <p style="margin:0 0 5px 0;">${producto.tienda}</p>
-                <p style="margin:0; color: #ff9f0f;"><b>$${producto.preciounitario} / ${producto.unidadmedida}</b></p>
+                <p style="margin:0 0 5px 0; font-weight: bold; font-family: Poppins; sans-serif;">${producto.tienda}</p>
+                <p style="margin:0; color: #d18a3a; font-family: Poppins, sans-serif;"><b>$${producto.preciounitario}/${producto.unidadmedida}</b></p>
                 <hr>
-                <p style="font-size: 11px; color: #666; margin:0;">${producto.direccion}</p>
+                <p style="font-size: 11px; color: #666; margin:0; font-family: Poppins, sans-serif;">${producto.direccion}</p>
             </div>
         `;
         pin.bindPopup(contenidoPopup); // Asocia el popup al marcador

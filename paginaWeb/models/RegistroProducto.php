@@ -36,7 +36,7 @@ class RegistroProducto extends ActiveRecord {
             self::$alertas['error'][] = 'La cantidad es obligatoria y debe ser numérica.';
         }
 
-        $unidadesPermitidas = ['kg', 'litro', 'pieza']; // ESTO SE TIENE QUE CAMBIAR
+        $unidadesPermitidas = ['kg', 'litro', 'pieza'];
         if($this->unidadmedida === '' || !in_array(strtolower($this->unidadmedida), $unidadesPermitidas)) {
             self::$alertas['error'][] = 'La unidad de medida no es válida';
         }
