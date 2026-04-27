@@ -18,7 +18,6 @@
             <directory suffix=".php">jobs</directory>
             <directory suffix=".php">models</directory>
 
-            <file>Router.php</file>
             <file>includes/funciones.php</file>
         </include>
     </source>
