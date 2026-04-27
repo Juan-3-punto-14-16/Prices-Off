@@ -11,6 +11,25 @@ jobs:
     name: Ejecutar Pest y SonarQube
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: robot
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: test_pricesoff
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        
+    defaults:
+      run:
+        working-directory: paginaWeb
+
     steps:
       # 1. El servidor descarga tu código
       - name: Descargar código
@@ -29,6 +48,17 @@ jobs:
       - name: Instalar Composer
         working-directory: paginaWeb
         run: composer install --prefer-dist --no-progress
+
+      - name: Preparar Base de Datos de Pruebas
+        run: PGPASSWORD=password123 psql -h localhost -U robot -d test_pricesoff -f tests/db_test_seed.sql
+
+      - name: Crear archivo .env temporal
+        run: |
+          echo "DB_HOST=localhost" >> .env
+          echo "DB_PORT=5432" >> .env
+          echo "DB_NAME=test_pricesoff" >> .env
+          echo "DB_USER=robot" >> .env
+          echo "DB_PASS=password123" >> .env
 
       # 4. ¡LA MAGIA! Corremos las pruebas y generamos el archivo temporal clover.xml
       - name: Ejecutar Pest PHP y generar Cobertura
