@@ -14,11 +14,11 @@
     </testsuites>
     <source>
         <include>
-            <directory suffix=".php">controllers</directory>
-            <directory suffix=".php">jobs</directory>
             <directory suffix=".php">models</directory>
+            <directory suffix=".php">jobs</directory>
 
             <file>includes/funciones.php</file>
+            <file>controllers/APIController.php</file>
         </include>
     </source>
 </phpunit>
