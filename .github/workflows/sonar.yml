@@ -49,8 +49,10 @@ jobs:
         working-directory: paginaWeb
         run: composer install --prefer-dist --no-progress
 
-      - name: Preparar Base de Datos de Pruebas
-        run: PGPASSWORD=password123 psql -h localhost -U robot -d test_pricesoff -f tests/db_test_seed.sql
+      - name: Crear archivo JSON de Google
+        env:
+          GCP_CREDS: ${{ secrets.GCP_CREDENTIALS_JSON }}
+        run: echo "$GCP_CREDS" > google-credenciales.json
 
       - name: Crear archivo .env temporal
         run: |
@@ -59,6 +61,11 @@ jobs:
           echo "DB_NAME=test_pricesoff" >> .env
           echo "DB_USER=robot" >> .env
           echo "DB_PASS=password123" >> .env
+          echo "GOOGLE_GEOCODING_API_KEY=${{ secrets.GOOGLE_GEOCODING_API_KEY }}" >> .env
+          echo "DOCUMENT_AI_PROCESSOR_ID=${{ secrets.DOCUMENT_AI_PROCESSOR_ID }}" >> .env
+          echo "GOOGLE_CLOUD_PROJECT_ID=${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}" >> .env
+          echo "GOOGLE_CLOUD_LOCATION=${{ secrets.GOOGLE_CLOUD_LOCATION }}" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=google-credenciales.json" >> .env
 
       # 4. ¡LA MAGIA! Corremos las pruebas y generamos el archivo temporal clover.xml
       - name: Ejecutar Pest PHP y generar Cobertura

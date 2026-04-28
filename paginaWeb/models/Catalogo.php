@@ -39,7 +39,7 @@ class Catalogo extends ActiveRecord {
         $this->nombre = mb_strtolower($this->nombre, 'UTF-8');
 
         // Primera letra mayuscula y se envia la cadena ya estandarizada
-        $this->nombre = ucfirst($this->nombre);
+        $this->nombre = ucwords($this->nombre);
     }
 
     public static function eliminarHuerfanos () {

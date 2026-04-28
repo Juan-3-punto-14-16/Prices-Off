@@ -30,7 +30,7 @@ it('elimina únicamente los registros con más de 15 días de antigüedad según
         expect($registro)->toBeNull();
 
         $registro = RegistroProducto::find($resultadoB['id']);
-        expect($registro)->not()->toBeNull();
+        expect($registro)->not()->toBeNull()->toBeInstanceOf(RegistroProducto::class);
     } finally {
         ActiveRecord::revertirTransaccion();
     }
