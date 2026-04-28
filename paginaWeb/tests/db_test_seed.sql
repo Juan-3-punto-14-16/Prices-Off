@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-
+\restrict nDxcgM2VleyNXmt5UckAwi2CEFhDjjm2XVOZCugmP8DR5i0DdI2FjXBQr2eD8ji
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -648,4 +648,5 @@ ALTER TABLE ONLY public.registroproducto
 -- PostgreSQL database dump complete
 --
 
+\unrestrict nDxcgM2VleyNXmt5UckAwi2CEFhDjjm2XVOZCugmP8DR5i0DdI2FjXBQr2eD8ji
 

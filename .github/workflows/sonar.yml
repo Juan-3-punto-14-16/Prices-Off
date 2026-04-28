@@ -49,6 +49,9 @@ jobs:
         working-directory: paginaWeb
         run: composer install --prefer-dist --no-progress
 
+      - name: Preparar Base de Datos de Pruebas
+        run: PGPASSWORD=password123 psql -h localhost -U robot -d test_pricesoff -f tests/db_test_seed.sql
+
       - name: Crear archivo JSON de Google
         env:
           GCP_CREDS: ${{ secrets.GCP_CREDENTIALS_JSON }}
