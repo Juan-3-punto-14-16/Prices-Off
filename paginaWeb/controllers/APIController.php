@@ -29,13 +29,13 @@ class APIController {
         $nombre = s(trim($_GET['nombre'] ?? ''));
 
         if(empty($nombre)) {
-            echo json_encode(['error' => ['El campo de búsqueda no puede estar vacío']]);
+            echo json_encode(['error' => 'El campo de búsqueda no puede estar vacío']);
             return;
         }
 
         $resultados = ViewModel::buscarProductos($nombre);
         if(empty($resultados)) {
-            echo json_encode(['error' => ['No se encontraron productos con ese nombre']]);
+            echo json_encode(['error' => 'No se encontraron productos con ese nombre']);
             return;
         }
 

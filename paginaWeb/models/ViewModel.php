@@ -22,6 +22,7 @@ class ViewModel extends ActiveRecord {
     public $votospositivos;
     public $votosnegativos;
 
+    // El constructor no se utiliza como tal, pero bueno, es necesario...
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
         $this->publicado = $args['publicado'] ?? '';
