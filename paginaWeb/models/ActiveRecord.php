@@ -7,6 +7,7 @@ class ActiveRecord {
     protected static $tabla = '';
     protected static $columnasDB = [];
     public $id;
+    //public $imagen;
 
     protected const SELECT_BASE = "SELECT * FROM ";
 
@@ -30,12 +31,20 @@ class ActiveRecord {
         self::$db = $database;
     }
 
+    // NO SON NECESARIAS PARA ESTE PROYECTO
+    /*
     public static function setAlerta($tipo, $mensaje) {
         static::$alertas[$tipo][] = $mensaje;
     }
 
     // Validación
     public static function getAlertas() {
+        return static::$alertas;
+    }
+    */
+
+    public function validar() {
+        static::$alertas = [];
         return static::$alertas;
     }
 
@@ -199,4 +208,17 @@ class ActiveRecord {
         
         return $stmt->execute([$this->id]);
     }
+
+    /* 
+    public function setImagen($img) {
+        // Elimina la imagen previa
+        if(!is_null($this->id)) {
+            $this->borrarImagen();
+        }
+
+        if ($img) {
+            $this->imagen = $img;
+        }
+    }
+    */
 }
