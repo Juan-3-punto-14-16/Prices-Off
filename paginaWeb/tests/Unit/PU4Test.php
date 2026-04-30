@@ -14,15 +14,17 @@ it('elimina únicamente los registros con más de 15 días de antigüedad según
     ActiveRecord::iniciarTransaccion();
     try {
         // PASO 1: Insertar en la BD el registro A con una fecha de registro de hace 200 días
-        $producto->fecharegistro = date('Y/m/d', strtotime('-200 day'));
+        $producto->fecharegistro = date('Y-m-d', strtotime('-200 day'));
         $resultadoA = $producto->guardar();
 
         // PASO 2: Insertar en la BD el registro B con una fecha de registro de hace 5 días
-        $producto->fecharegistro = date('Y/m/d', strtotime('-5 day'));
+        $producto->fecharegistro = date('Y-m-d', strtotime('-5 day'));
         $resultadoB = $producto->guardar();
         
         // PASO 3: Invocar al método de eliminación
         $filasAfectadas = RegistroProducto::eliminarRegistrosAntiguos();
+
+        // Al menos uno, porque pueden haber más de un registro con más de 15 días
         expect($filasAfectadas)->toBeGreaterThanOrEqual(1);
 
         // PASO 4: Consultar el conteo total de registros restantes

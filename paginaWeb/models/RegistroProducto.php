@@ -16,7 +16,7 @@ class RegistroProducto extends ActiveRecord {
     public function __construct($args = []){
         $this->id = $args['id'] ?? null;
         $this->precio = trim($args['precio'] ?? '');
-        $this->fecharegistro = date('Y/m/d');
+        $this->fecharegistro = date('Y-m-d');
         $this->unidadmedida = trim($args['unidadmedida'] ?? '');
         $this->cantidad = trim($args['cantidad'] ?? '');
 
@@ -29,11 +29,11 @@ class RegistroProducto extends ActiveRecord {
         self::$alertas = [];
 
         if($this->precio === '' || filter_var($this->precio, FILTER_VALIDATE_FLOAT) === false || $this->precio < 0) {
-            self::$alertas['error'][] = 'El precio debe ser un número válido.';
+            self::$alertas['error'][] = 'El precio debe ser un número válido';
         }
 
         if($this->cantidad === '' || filter_var($this->cantidad, FILTER_VALIDATE_FLOAT) === false || $this->cantidad <= 0) {
-            self::$alertas['error'][] = 'La cantidad es obligatoria y debe ser numérica.';
+            self::$alertas['error'][] = 'La cantidad es obligatoria y debe ser numérica';
         }
 
         $unidadesPermitidas = ['kg', 'litro', 'pieza'];

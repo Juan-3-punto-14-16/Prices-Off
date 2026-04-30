@@ -26,10 +26,10 @@ it('extrae y limpia correctamente las propiedades de un objeto Entity simulado s
 
     // PASO 2: Pasar el objeto simulado al método del controlador
     $resultado = $extraerLineItem->invoke(null, $mockEntity);
-    expect($resultado)->toBeArray();
-    expect($resultado['nombre'])->toBe('LECHE LALA'); 
-    expect($resultado['precio'])->toBe(28.5); 
-    expect($resultado['unidadmedida'])->toBe('litro');
+    expect($resultado)->toBeArray()
+        ->and($resultado['nombre'])->toBe('LECHE LALA')
+        ->and($resultado['precio'])->toBe(28.5)
+        ->and($resultado['unidadmedida'])->toBe('litro');
 
     // PASO 3: Instanciar un segundo objeto que omita la propiedad del precio, y pasarlo al método
     $mockEntity = new class {
@@ -48,8 +48,8 @@ it('extrae y limpia correctamente las propiedades de un objeto Entity simulado s
     };
 
     $resultado = $extraerLineItem->invoke(null, $mockEntity);
-    expect($resultado)->toBeArray();
-    expect($resultado['nombre'])->toBe('GALLETAS MARIAS');
-    expect($resultado['precio'])->toBe(0); 
-    expect($resultado['unidadmedida'])->toBe('kg');
+    expect($resultado)->toBeArray()
+        ->and($resultado['nombre'])->toBe('GALLETAS MARIAS')
+        ->and($resultado['precio'])->toBe(0)
+        ->and($resultado['unidadmedida'])->toBe('kg');
 });

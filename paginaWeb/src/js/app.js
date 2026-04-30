@@ -320,6 +320,8 @@ function iniciarMecanismoVotos() {
 
     if (contenedor) {
         contenedor.addEventListener('click', async (e) => {
+            // Creo que si hay un problema con loopback y el id, debe ser aquí.
+            // - Alexis.
             const boton = e.target.closest('.btn_votar');
             if (boton) {
                 const idProducto = boton.dataset.id;
