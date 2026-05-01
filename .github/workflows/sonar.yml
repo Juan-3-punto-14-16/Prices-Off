@@ -54,28 +54,18 @@ jobs:
 
       - name: Crear archivo JSON de Google
         env:
-          GCP_CREDS: ${{ secrets.GCP_CREDENTIALS_JSON }}
+          GCP_CREDS_B64: ${{ secrets.GCP_CREDENTIALS_JSON }}
         run: |
-          # 1. Trampa para detectar si el secreto está vacío
-          if [ -z "$GCP_CREDS" ]; then
-            echo "❌ ERROR FATAL: El secreto de GitHub está vacío o no fue inyectado."
-            exit 1
-          fi
+          # 1. Decodificar el secreto de Base64 a un archivo físico
+          echo "$GCP_CREDS_B64" | base64 -d > google-credenciales.json
           
-          # 2. Guardado seguro sin usar "echo"
-          cat << 'EOF' > google-credenciales.json
-          ${{ secrets.GCP_CREDENTIALS_JSON }}
-          EOF
-          
-          # 3. Trampa de PHP para verificar si el JSON es válido
-          echo "🔍 Verificando integridad del JSON..."
+          # 2. La prueba final (¡Esta vez sí pasará!)
           php -r "
             \$json = json_decode(file_get_contents('google-credenciales.json'), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-              echo '❌ ERROR: El archivo está corrupto. Código de error JSON: ' . json_last_error_msg() . PHP_EOL;
-              exit(1);
+              echo '❌ ERROR: ' . json_last_error_msg() . PHP_EOL; exit(1);
             }
-            echo '✅ JSON de credenciales estructurado correctamente.' . PHP_EOL;
+            echo '✅ JSON decodificado perfectamente.' . PHP_EOL;
           "
 
       - name: Crear archivo .env temporal
