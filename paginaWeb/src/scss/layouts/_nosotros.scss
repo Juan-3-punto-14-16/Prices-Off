@@ -1,0 +1,76 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m; 
+
+.nosotros-container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: v.$separacion 0;
+
+    h1 {
+        text-align: center;
+        color: v.$negro;
+        font-family: v.$fuente_principal;
+        font-size: 5rem;
+        font-weight: v.$black;
+        margin-bottom: 8rem;
+        text-transform: uppercase;
+    }
+
+    .row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3rem;
+        margin-bottom: 5rem;
+
+        @include m.tablet {
+            flex-direction: row;
+            justify-content: center;
+            gap: 4rem;
+
+            &.reverse {
+                flex-direction: row-reverse; // Pone la uva del lado derecho
+            }
+        }
+
+        /* La nueva caja principal */
+        .tarjeta-borde {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: .3rem solid v.$verde_oscuro; // Borde más delgado como en el diseño
+            width: 100%;
+            max-width: 65rem; // Hace la caja ancha
+            background-color: transparent;
+        }
+
+        .nombre-box {
+            padding: 0 3rem; // Espacio a los lados del texto
+            color: v.$negro; // El texto en tu diseño original es negro
+            font-weight: v.$bold;
+            font-size: 2rem; // Letra un poco más chica
+            width: 100%;
+        }
+
+        .personaje-img {
+            width: 14rem; // Achicamos un poco la foto
+            flex-shrink: 0; // Evita que la foto se apachurre
+            img {
+                width: 100%;
+                display: block;
+                mix-blend-mode: multiply;
+            }
+        }
+
+        .fruta-svg {
+            display: flex;
+            justify-content: center;
+            svg {
+                width: 10rem;
+                height: 10rem;
+                display: block;
+            }
+        }
+    }
+}
