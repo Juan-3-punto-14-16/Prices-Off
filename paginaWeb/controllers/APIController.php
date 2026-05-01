@@ -217,6 +217,12 @@ class APIController {
             return;
         }
 
+        $productoExistente = RegistroProducto::find($voto->idregistroproducto);
+        if(!$productoExistente) {
+            echo json_encode(['error' => 'Datos inválidos']);
+                return;
+        }
+
         if($voto->id) {
             $votoExistente = Voto::find($voto->id);
 
