@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('PS_3: Sistema de Reputación (Likes/Dislikes)', () => {
+test.describe('Sistema de Reputación (Likes/Dislikes) PS_3', () => {
     
-    test('Validar aprobación de precio y persistencia post-recarga', async ({ page }) => {
+    test('Ejecutar voto y verificar persistencia', async ({ page }) => {
         // Navegar al inicio
         await page.goto('/');
 
