@@ -39,6 +39,9 @@ it('maneja errores de autenticacion con Google Cloud sin romper el servidor segu
 
     if ($originalEnv) {
         putenv("GOOGLE_APPLICATION_CREDENTIALS=$originalEnv");
+        $_ENV['GOOGLE_APPLICATION_CREDENTIALS'] = $originalEnv; // ¡Esta línea faltaba!
+    } else {
+        unset($_ENV['GOOGLE_APPLICATION_CREDENTIALS']);
     }
     if (file_exists($tempFile)) @unlink($tempFile);
     unset($_FILES['imagen']);
