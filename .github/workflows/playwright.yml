@@ -56,7 +56,7 @@ jobs:
     - name: Crear archivo JSON de Google
       env:
         GCP_CREDS: ${{ secrets.GCP_CREDENTIALS_JSON }}
-      run: echo "$GCP_CREDS" > google-credenciales.json
+      run: echo "$GCP_CREDS" > paginaWeb/google-credenciales.json
 
     - name: Crear archivo .env temporal
       run: |
